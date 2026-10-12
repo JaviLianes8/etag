@@ -1,25 +1,35 @@
-"""Compare entity-tags with the weak and strong rules of RFC 7232 section 2.3.2."""
+"""Compare entity-tags with the strong and weak functions of RFC 9110 section 8.8.3.2."""
 
 from __future__ import annotations
 
-from ._parse import WILDCARD, parse, parse_one
+from ._parse import Header, is_wildcard, parse, parse_one
+from ._tag import EntityTag
 
 
-def matches(header: str, etag: str, *, weak: bool = True) -> bool:
-    """Report whether ``etag`` satisfies a conditional request header.
+def strong_compare(a: str | EntityTag, b: str | EntityTag) -> bool:
+    """Report whether two entity-tags are both strong and have the same opaque value."""
+    left, right = parse_one(a), parse_one(b)
+    return not left.weak and not right.weak and left.value == right.value
 
-    ``header`` is an ``If-None-Match`` or ``If-Match`` value and ``etag`` is a single
-    entity-tag (as :func:`etag.make_etag` returns). With ``weak=True`` (the default,
-    matching ``If-None-Match``) two tags are equivalent when their opaque values match,
-    regardless of either being weak. With ``weak=False`` (matching ``If-Match``) both
-    tags must be strong. A ``*`` wildcard header matches any tag.
+
+def weak_compare(a: str | EntityTag, b: str | EntityTag) -> bool:
+    """Report whether two entity-tags have the same opaque value, weak or not."""
+    return parse_one(a).value == parse_one(b).value
+
+
+def matches(header: Header, etag: str | EntityTag, *, weak: bool = True) -> bool:
+    """Report whether ``etag`` matches a member of an If-None-Match or If-Match value.
+
+    ``header`` is the field value (text, bytes, or a list of field lines) and ``etag``
+    is a single entity-tag. With ``weak=True`` (the default, the If-None-Match rule)
+    the weak comparison is used; with ``weak=False`` (the If-Match rule) the strong one.
+    A ``*`` wildcard matches any tag. Malformed input raises ``ValueError``; to apply
+    the RFC outcome for malformed requests instead, use :func:`if_match` or
+    :func:`if_none_match`.
     """
-    if header.strip() == WILDCARD:
+    target = parse_one(etag)
+    if is_wildcard(header):
         return True
-    target_value, target_weak = parse_one(etag)
-    for value, is_weak in parse(header):
-        if value != target_value:
-            continue
-        if weak or (not is_weak and not target_weak):
-            return True
-    return False
+    if not weak and target.weak:
+        return False
+    return any(tag.value == target.value and (weak or not tag.weak) for tag in parse(header))

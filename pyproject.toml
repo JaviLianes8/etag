@@ -4,18 +4,27 @@ build-backend = "hatchling.build"
 
 [project]
 name = "etag"
-version = "0.1.0"
-description = "Create, parse and compare HTTP ETags per RFC 7232, zero dependencies and fully typed"
+version = "0.2.0"
+description = "Create, parse and compare HTTP entity-tags and evaluate conditional requests per RFC 9110"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
 license-files = ["LICENSE"]
 authors = [{ name = "Javier Lianes", email = "javier@lianes8studio.com" }]
-keywords = []
+keywords = ["etag", "http", "rfc 9110", "conditional requests", "if-none-match", "if-match", "caching", "typed"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Software Development :: Libraries",
     "Typing :: Typed",
 ]
 dependencies = []
