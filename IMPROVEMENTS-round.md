@@ -10,7 +10,7 @@ Progress:
 - [x] Docs: README, CHANGELOG, docstrings, packaging metadata
 - [x] Gates: ruff format, ruff check, mypy --strict, pytest
 - [x] Independent review findings fixed with regression tests
-- [ ] Pull request opened, guard clean
+- [x] Pull request opened (#2), guard clean
 
 `make_etag`, `parse` and `matches` keep their names and arguments. `parse` items are
 now `EntityTag`, which still unpack and compare as `(value, weak)`; code annotated with
