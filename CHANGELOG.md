@@ -6,6 +6,33 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.2.0]
+
+### Added
+
+- `evaluate_preconditions` returns 412, 304 or `None` for If-Match and If-None-Match in
+  the order of RFC 9110 section 13.2.2.
+- `if_match`, `if_none_match` and `if_range` follow the evaluation steps of RFC 9110
+  sections 13.1.1, 13.1.2 and 13.1.5, including the wildcard against a missing
+  representation and malformed field values.
+- `EntityTag`, a `NamedTuple` of `(value, weak)` whose `str()` is the header form.
+- `format_etag` quotes and validates a server-chosen opaque value.
+- `strong_compare` and `weak_compare` expose the RFC 9110 comparison functions.
+- `is_wildcard` tells `*` apart from the entity-tag `"*"`.
+- Header arguments accept `bytes` (decoded as Latin-1) and lists of field lines.
+
+### Changed
+
+- `parse` returns `EntityTag` items, which still unpack and compare as `(value, weak)`.
+- References moved from RFC 7232 to RFC 9110, which obsoletes it.
+
+### Fixed
+
+- Entity-tags not separated by a comma (`"a" "b"`) are rejected.
+- Empty list elements (`"a", , "b"`) are skipped, as recipients are required to do.
+- Only spaces and tabs count as optional whitespace around a field value.
+- `matches` validates its `etag` argument even when the header is the wildcard.
+
 ## [0.1.0]
 
 - `make_etag` builds a quoted, optionally weak entity-tag from bytes or text.
