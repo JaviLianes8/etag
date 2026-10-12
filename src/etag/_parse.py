@@ -10,7 +10,7 @@ from ._tag import EntityTag, is_etagc
 WILDCARD = "*"
 _OWS = " \t"
 
-Header: TypeAlias = str | bytes | Sequence[str | bytes]
+Header: TypeAlias = str | bytes | bytearray | Sequence[str | bytes | bytearray]
 
 
 def field_value(header: Header) -> str:
