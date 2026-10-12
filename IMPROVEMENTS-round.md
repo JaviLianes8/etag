@@ -2,13 +2,13 @@
 
 Progress:
 - [x] Brainstorm ranked improvements (this file)
-- [ ] Parser: comma-separated list rule, empty elements, OWS only, field lines, bytes
-- [ ] `EntityTag` value type, `format_etag`, `strong_compare`, `weak_compare`, `is_wildcard`
-- [ ] Conditional requests: `if_match`, `if_none_match`, `if_range`, `evaluate_preconditions`
-- [ ] Contracts: RFC 9110 fixtures, grammar oracle, typing, README examples
-- [ ] Installed wheel e2e test
-- [ ] Docs: README, CHANGELOG, docstrings, packaging metadata
-- [ ] Gates: ruff format, ruff check, mypy --strict, pytest
+- [x] Parser: comma-separated list rule, empty elements, OWS only, field lines, bytes
+- [x] `EntityTag` value type, `format_etag`, `strong_compare`, `weak_compare`, `is_wildcard`
+- [x] Conditional requests: `if_match`, `if_none_match`, `if_range`, `evaluate_preconditions`
+- [x] Contracts: RFC 9110 fixtures, grammar oracle, typing, README examples
+- [x] Installed wheel e2e test
+- [x] Docs: README, CHANGELOG, docstrings, packaging metadata
+- [x] Gates: ruff format, ruff check, mypy --strict, pytest
 - [ ] Independent review findings fixed with regression tests
 - [ ] Pull request opened, guard clean
 
