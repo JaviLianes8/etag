@@ -6,6 +6,7 @@ import etag
 # contract and the test below fails if the module and this list disagree.
 PUBLIC_API: list[str] = [
     "EntityTag",
+    "Header",
     "evaluate_preconditions",
     "format_etag",
     "if_match",

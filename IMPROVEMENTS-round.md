@@ -9,11 +9,12 @@ Progress:
 - [x] Installed wheel e2e test
 - [x] Docs: README, CHANGELOG, docstrings, packaging metadata
 - [x] Gates: ruff format, ruff check, mypy --strict, pytest
-- [ ] Independent review findings fixed with regression tests
+- [x] Independent review findings fixed with regression tests
 - [ ] Pull request opened, guard clean
 
-Every item is additive. `make_etag`, `parse` and `matches` keep their names, their
-arguments and their results (`parse` items still unpack and compare as `(value, weak)`).
+`make_etag`, `parse` and `matches` keep their names and arguments. `parse` items are
+now `EntityTag`, which still unpack and compare as `(value, weak)`; code annotated with
+`list[tuple[str, bool]]` has to widen its annotation (noted in the CHANGELOG).
 
 ## Starting point
 
@@ -71,6 +72,17 @@ current text turned up these gaps:
    suite. RFC 9110 everywhere, CHANGELOG entry, docstrings on every public name.
 10. **Packaging.** Classifiers, keywords, a version-matches-metadata test and an
     installed-wheel e2e test.
+
+## Review fixes
+
+- An empty list of field lines (what `getlist()` returns) means the field is absent,
+  instead of an If-Match that fails with 412.
+- Blank field lines are dropped before joining, so `["*", ""]` is still the wildcard.
+- `exists=True` lets a resource served without an entity-tag answer `*` correctly.
+- `CONNECT`, `OPTIONS` and `TRACE` ignore preconditions (13.2.1).
+- `matches` and the evaluators parse the current tag once instead of per element.
+- The CHANGELOG states the typing change for annotated callers and the stricter `etag`
+  argument; tests assert full lists and tolerate either spelling of a literal union.
 
 ## Out of scope
 

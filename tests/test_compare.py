@@ -38,3 +38,8 @@ def test_matches_reads_field_lines_and_bytes() -> None:
 def test_matches_raises_on_a_malformed_header() -> None:
     with pytest.raises(ValueError):
         matches('"a" "b"', '"a"')
+
+
+def test_matches_with_a_weak_target_never_matches_strongly() -> None:
+    assert matches('"a", W/"a"', 'W/"a"', weak=False) is False
+    assert matches('"x", W/"a"', 'W/"a"') is True

@@ -6,7 +6,7 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
-## [0.2.0]
+## [0.2.0] - 2026-10-12
 
 ### Added
 
@@ -19,11 +19,19 @@ All notable changes to this project are documented here. The format follows
 - `format_etag` quotes and validates a server-chosen opaque value.
 - `strong_compare` and `weak_compare` expose the RFC 9110 comparison functions.
 - `is_wildcard` tells `*` apart from the entity-tag `"*"`.
-- Header arguments accept `bytes` (decoded as Latin-1) and lists of field lines.
+- Header arguments accept `bytes` (decoded as Latin-1) and lists of field lines; blank
+  lines are dropped and an empty list means the field is absent. `Header` names the type.
+- `exists=True` covers a resource that exists but is served without an entity-tag.
+- `evaluate_preconditions` ignores the fields for `CONNECT`, `OPTIONS` and `TRACE`.
 
 ### Changed
 
 - `parse` returns `EntityTag` items, which still unpack and compare as `(value, weak)`.
+  Code annotated with `list[tuple[str, bool]]` needs `list[EntityTag]` or
+  `Sequence[tuple[str, bool]]`, since `list` is invariant for type checkers.
+- `matches('"*"', '"*"')` is `True`: the tag `"*"` is no longer mistaken for the wildcard.
+- The `etag` argument of `matches` must be exactly one entity-tag; a trailing comma
+  (`'"a",'`) now raises `ValueError`.
 - References moved from RFC 7232 to RFC 9110, which obsoletes it.
 
 ### Fixed

@@ -20,8 +20,10 @@ def field_value(header: Header) -> str:
     if isinstance(header, (bytes, bytearray)):
         return bytes(header).decode("latin-1")
     if isinstance(header, Sequence):
-        # Section 5.3: field lines with the same name join with a comma.
-        return ", ".join(_line(line) for line in header)
+        # Section 5.3: field lines with the same name join with a comma. Blank lines
+        # carry no element, so they are dropped rather than turned into one.
+        lines = (_line(line) for line in header)
+        return ", ".join(line for line in lines if line.strip(_OWS))
     raise TypeError(f"header must be str, bytes or a list of them, not {type(header).__name__}")
 
 

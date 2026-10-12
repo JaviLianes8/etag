@@ -100,3 +100,31 @@ def test_evaluate_preconditions_follows_section_13_2_2(
 def test_evaluate_preconditions_validates_the_current_tag() -> None:
     with pytest.raises(ValueError):
         evaluate_preconditions("GET", "no quotes")
+
+
+def test_an_empty_list_of_field_lines_means_the_field_is_absent() -> None:
+    assert evaluate_preconditions("PUT", '"a"', if_match=[], if_none_match=[]) is None
+    assert evaluate_preconditions("PUT", '"a"', if_match="") == 412
+
+
+def test_blank_lines_do_not_hide_the_wildcard() -> None:
+    assert if_none_match(["*", ""], '"a"') is False
+    assert evaluate_preconditions("PUT", '"a"', if_none_match=["*", ""]) == 412
+
+
+@pytest.mark.parametrize("method", ["CONNECT", "OPTIONS", "TRACE"])
+def test_methods_without_a_representation_ignore_preconditions(method: str) -> None:
+    assert evaluate_preconditions(method, '"a"', if_match='"b"', if_none_match="*") is None
+
+
+def test_a_resource_can_exist_without_an_entity_tag() -> None:
+    assert if_match("*", None, exists=True) is True
+    assert if_match('"a"', None, exists=True) is False
+    assert if_none_match("*", None, exists=True) is False
+    assert evaluate_preconditions("PUT", None, if_none_match="*", exists=True) == 412
+    assert evaluate_preconditions("PUT", None, if_match="*", exists=True) is None
+
+
+def test_exists_false_with_a_tag_is_rejected() -> None:
+    with pytest.raises(ValueError, match="exists=False"):
+        if_match("*", '"a"', exists=False)

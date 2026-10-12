@@ -30,5 +30,6 @@ def matches(header: Header, etag: str | EntityTag, *, weak: bool = True) -> bool
     target = parse_one(etag)
     if is_wildcard(header):
         return True
-    compare = weak_compare if weak else strong_compare
-    return any(compare(tag, target) for tag in parse(header))
+    if not weak and target.weak:
+        return False
+    return any(tag.value == target.value and (weak or not tag.weak) for tag in parse(header))

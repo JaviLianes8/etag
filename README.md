@@ -31,9 +31,11 @@ print(evaluate_preconditions("PUT", None, if_none_match="*"))  # None (go ahead)
 ```
 
 Pass the selected representation's entity-tag, or `None` when the resource has no
-current representation. Header arguments take text, `bytes` (decoded as Latin-1, as
-ASGI servers hand them over) or a list of field lines, which are joined in order as
-section 5.3 says. If you also support dates, check If-Unmodified-Since only when there
+current representation. A resource that exists but is served without an entity-tag
+passes `etag=None, exists=True`. Header arguments take text, `bytes` (decoded as
+Latin-1, as ASGI servers hand them over) or a list of field lines, which are joined in
+order as section 5.3 says; `None` or an empty list means the request did not carry the
+field. `CONNECT`, `OPTIONS` and `TRACE` ignore preconditions (section 13.2.1). If you also support dates, check If-Unmodified-Since only when there
 is no If-Match, and If-Modified-Since only when there is no If-None-Match.
 
 ## Each condition on its own
@@ -102,7 +104,8 @@ outcome for malformed requests instead.
 | `strong_compare(a, b)`, `weak_compare(a, b)` | section 8.8.3.2 comparisons |
 | `matches(header, etag, *, weak=True)` | is `etag` in the list |
 | `if_match`, `if_none_match`, `if_range` | evaluate one condition |
-| `evaluate_preconditions(method, etag, *, if_match=None, if_none_match=None)` | 412, 304 or `None` |
+| `evaluate_preconditions(method, etag, *, if_match=None, if_none_match=None, exists=None)` | 412, 304 or `None` |
+| `Header` | type of every header argument: `str`, `bytes` or a list of field lines |
 
 ## Why
 

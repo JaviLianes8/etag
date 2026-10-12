@@ -18,9 +18,16 @@ def test_empty_list_elements_are_skipped() -> None:
 
 
 # Adapted from the RFC 9110 section 5.6.1.2 token examples by quoting each token.
-@pytest.mark.parametrize("field", ['"foo","bar"', '"foo" ,"bar",', '"foo" , ,"bar","charlie"'])
-def test_the_rfc_list_examples_are_accepted(field: str) -> None:
-    assert [tag.value for tag in parse(field)][:2] == ["foo", "bar"]
+@pytest.mark.parametrize(
+    ("field", "values"),
+    [
+        ('"foo","bar"', ["foo", "bar"]),
+        ('"foo" ,"bar",', ["foo", "bar"]),
+        ('"foo" , ,"bar","charlie"', ["foo", "bar", "charlie"]),
+    ],
+)
+def test_the_rfc_list_examples_are_accepted(field: str, values: list[str]) -> None:
+    assert [tag.value for tag in parse(field)] == values
 
 
 @pytest.mark.parametrize("field", ["", ",", ",   ,", " \t "])
@@ -82,6 +89,11 @@ def test_field_lines_cannot_mix_the_wildcard_with_tags() -> None:
     with pytest.raises(ValueError):
         parse(["*", '"a"'])
     assert is_wildcard(["*", "*"]) is False
+
+
+def test_blank_field_lines_are_dropped_before_joining() -> None:
+    assert is_wildcard(["*", "", " 	"]) is True
+    assert parse(["", '"a"', " "]) == [EntityTag("a")]
 
 
 def test_no_field_lines_is_no_entity_tag() -> None:

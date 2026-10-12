@@ -46,7 +46,8 @@ def test_entity_tag_fields_are_typed(mypy_output: str) -> None:
 
 
 def test_evaluate_preconditions_returns_a_status_literal(mypy_output: str) -> None:
-    assert _revealed(mypy_output, 6) == "Literal[304] | Literal[412] | None"
+    revealed = _revealed(mypy_output, 6).replace("Literal[304] | Literal[412]", "Literal[304, 412]")
+    assert revealed == "Literal[304, 412] | None"
 
 
 def test_evaluators_return_bool(mypy_output: str) -> None:
