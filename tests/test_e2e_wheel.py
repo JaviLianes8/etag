@@ -102,5 +102,7 @@ def test_the_archives_hold_exactly_the_package_and_its_sources(tmp_path: Path) -
     assert "tests/upstream/MANIFEST.json" in members
     assert "tests/fixtures/oracle_runs.json" in members
     assert not [m for m in members if m.startswith("tests/upstream/") and m.endswith(".txt")]
-    assert not [m for m in members if "__pycache__" in m or m.startswith((".", "dist"))]
+    # hatchling always adds .gitignore; nothing else outside the list may slip in.
+    stray = [m for m in members if "__pycache__" in m or m.startswith((".", "dist"))]
+    assert stray == [".gitignore"]
     assert "CERT-1.0-REPORT.md" not in members and "IMPROVEMENTS-round.md" not in members
