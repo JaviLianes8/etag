@@ -106,9 +106,16 @@ DJANGO_SCENARIOS = [
 ]
 
 
-@pytest.mark.parametrize(("test", "method", "current", "match", "none_match", "code"), DJANGO_SCENARIOS)
+@pytest.mark.parametrize(
+    ("test", "method", "current", "match", "none_match", "code"), DJANGO_SCENARIOS
+)
 def test_django_conditional_processing_scenarios(
-    test: str, method: str, current: str | None, match: str | None, none_match: str | None, code: int
+    test: str,
+    method: str,
+    current: str | None,
+    match: str | None,
+    none_match: str | None,
+    code: int,
 ) -> None:
     source = read_upstream("django-conditional_tests.py.txt")
     assert f"def {test}(self)" in source

@@ -25,7 +25,7 @@ def run_werkzeug(case: dict[str, Any]) -> dict[str, Any]:
         every = tags.as_set(include_weak=True)
         weak = _sorted(tag for tag in every if tags.is_weak(tag))
         parsed.append({"star": tags.star_tag, "strong": _sorted(tags.as_set()), "weak": weak})
-    modified = []
+    modified: list[bool | None] = []
     for method, current, _, none_match in case["scenarios"]:
         if method != "GET" or current is None or none_match is None:
             modified.append(None)
@@ -99,5 +99,7 @@ def run_starlette(case: dict[str, Any]) -> list[bool | None]:
             answers.append(None)
             continue
         response = headers(headers={"etag": current})
-        answers.append(files.is_not_modified(response, headers(headers={"if-none-match": none_match})))
+        answers.append(
+            files.is_not_modified(response, headers(headers={"if-none-match": none_match}))
+        )
     return answers

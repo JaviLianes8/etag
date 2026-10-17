@@ -4,7 +4,7 @@ $ErrorActionPreference = "Stop"
 $steps = @(
     { ruff format --check . },
     { ruff check . },
-    { mypy --strict src tests },
+    { mypy --strict src tests scripts },
     { python -m pytest }
 )
 foreach ($step in $steps) {

@@ -95,10 +95,12 @@ def fresh_pairs(case: dict[str, Any]) -> list[list[str]]:
 
 def tools() -> dict[str, str | None]:
     node = shutil.which("node")
-    version = subprocess.run([node, "--version"], capture_output=True, text=True) if node else None
-    found = {name: importlib.metadata.version(name) for name in ("werkzeug", "django")}
-    found |= {name: importlib.metadata.version(name) for name in ("aiohttp", "starlette")}
-    return {"python": platform.python_version(), **found, "node": version and version.stdout.strip()}
+    version = None
+    if node is not None:
+        version = subprocess.run([node, "--version"], capture_output=True, text=True).stdout
+    names = ("werkzeug", "django", "aiohttp", "starlette")
+    found: dict[str, str | None] = {name: importlib.metadata.version(name) for name in names}
+    return {"python": platform.python_version(), **found, "node": version and version.strip()}
 
 
 def main() -> int:

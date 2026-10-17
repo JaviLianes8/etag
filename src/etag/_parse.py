@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import TypeAlias
 
-from ._plain import check_flag, octets, text, type_name
+from ._plain import octets, text, type_name
 from ._tag import EntityTag, format_etag, is_etagc
 
 WILDCARD = "*"
@@ -109,8 +109,12 @@ def parse(header: Header) -> list[EntityTag]:
 def parse_one(etag: str | EntityTag) -> EntityTag:
     """Read exactly one entity-tag, rejecting lists, empty elements and the wildcard."""
     if isinstance(etag, EntityTag):
+        # The tuple slots themselves: a subclass cannot replace the fields it reports.
         value, weak = tuple.__getitem__(etag, 0), tuple.__getitem__(etag, 1)
-        check_flag("weak", weak)
+        if not isinstance(value, str):
+            raise TypeError(f"opaque value must be a str, not {type_name(value)}")
+        if not isinstance(weak, bool):
+            raise TypeError(f"weak must be a bool, not {type_name(weak)}")
         format_etag(value, weak=weak)  # validates the opaque value
         return EntityTag(text(value), weak)
     if not isinstance(etag, str):

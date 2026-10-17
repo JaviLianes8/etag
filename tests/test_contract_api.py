@@ -25,29 +25,26 @@ from etag import (
     weak_compare,
 )
 
-K, P = "KEYWORD_ONLY", "POSITIONAL_OR_KEYWORD"
+K, P, E = "KEYWORD_ONLY", "POSITIONAL_OR_KEYWORD", inspect.Parameter.empty
 SIGNATURES: dict[str, list[tuple[str, str, object]]] = {
-    "EntityTag": [("value", P, inspect.Parameter.empty), ("weak", P, False)],
+    "EntityTag": [("value", P, E), ("weak", P, False)],
     "evaluate_preconditions": [
-        ("method", P, inspect.Parameter.empty),
-        ("etag", P, inspect.Parameter.empty),
+        ("method", P, E),
+        ("etag", P, E),
         ("if_match", K, None),
         ("if_none_match", K, None),
         ("exists", K, None),
     ],
-    "format_etag": [("value", P, inspect.Parameter.empty), ("weak", K, False)],
-    "if_match": [("header", P, inspect.Parameter.empty), ("etag", P, inspect.Parameter.empty)]
-    + [("exists", K, None)],
-    "if_none_match": [("header", P, inspect.Parameter.empty)]
-    + [("etag", P, inspect.Parameter.empty), ("exists", K, None)],
-    "if_range": [("header", P, inspect.Parameter.empty), ("etag", P, inspect.Parameter.empty)],
-    "is_wildcard": [("header", P, inspect.Parameter.empty)],
-    "make_etag": [("data", P, inspect.Parameter.empty), ("weak", K, False)],
-    "matches": [("header", P, inspect.Parameter.empty), ("etag", P, inspect.Parameter.empty)]
-    + [("weak", K, True)],
-    "parse": [("header", P, inspect.Parameter.empty)],
-    "strong_compare": [("a", P, inspect.Parameter.empty), ("b", P, inspect.Parameter.empty)],
-    "weak_compare": [("a", P, inspect.Parameter.empty), ("b", P, inspect.Parameter.empty)],
+    "format_etag": [("value", P, E), ("weak", K, False)],
+    "if_match": [("header", P, E), ("etag", P, E), ("exists", K, None)],
+    "if_none_match": [("header", P, E), ("etag", P, E), ("exists", K, None)],
+    "if_range": [("header", P, E), ("etag", P, E)],
+    "is_wildcard": [("header", P, E)],
+    "make_etag": [("data", P, E), ("weak", K, False)],
+    "matches": [("header", P, E), ("etag", P, E), ("weak", K, True)],
+    "parse": [("header", P, E)],
+    "strong_compare": [("a", P, E), ("b", P, E)],
+    "weak_compare": [("a", P, E), ("b", P, E)],
 }
 
 
@@ -102,7 +99,9 @@ def test_the_method_must_be_text(method: object) -> None:
 
 @pytest.mark.parametrize("header", [0, False, 1.5, {}, {"a": 1}, object(), [1], [None]])
 def test_a_header_of_another_type_raises_type_error(header: object) -> None:
-    for call in (parse, is_wildcard, lambda h: if_match(h, '"a"'), lambda h: if_range(h, None)):
+    calls: list[Callable[[Any], object]] = [parse, is_wildcard]
+    calls += [lambda h: if_match(h, '"a"'), lambda h: if_range(h, None)]
+    for call in calls:
         with pytest.raises(TypeError):
             call(header)
     with pytest.raises(TypeError):

@@ -29,10 +29,10 @@ class LyingText(str):
     def strip(self, chars: str | None = None) -> str:
         return "*"
 
-    def startswith(self, *args: object) -> bool:  # type: ignore[override]
+    def startswith(self, *args: object) -> bool:
         return True
 
-    def find(self, *args: object) -> int:  # type: ignore[override]
+    def find(self, *args: object) -> int:
         return -1
 
     def __eq__(self, other: object) -> bool:
@@ -47,18 +47,18 @@ class LyingText(str):
     def __str__(self) -> str:
         return '"forged"'
 
-    def encode(self, *args: object) -> bytes:  # type: ignore[override]
+    def encode(self, *args: object) -> bytes:
         return b"forged"
 
 
 class LyingBytes(bytes):
-    def decode(self, *args: object) -> str:  # type: ignore[override]
+    def decode(self, *args: object) -> str:
         return "*"
 
 
 class LyingTag(EntityTag):
     @property
-    def value(self) -> str:  # type: ignore[override]
+    def value(self) -> str:
         return "forged"
 
 
@@ -107,7 +107,7 @@ def test_type_names_in_messages_are_bounded() -> None:
                 call(value)
             assert len(str(caught.value)) < 120
         with pytest.raises(TypeError) as caught:
-            format_etag("a", weak=value)  # type: ignore[arg-type]
+            format_etag("a", weak=value)
         assert len(str(caught.value)) < 120
 
 

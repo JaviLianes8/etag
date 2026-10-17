@@ -97,7 +97,7 @@ def test_django_parse_etags_differs_only_by_splitting_inside_quotes() -> None:
 
 
 def test_django_get_conditional_response_agrees_on_well_formed_requests() -> None:
-    compared = differs = 0
+    compared = differs = let_through = 0
     for scenario, answer in zip(SCENARIOS, RUNS["django"]["get_conditional_response"], strict=True):
         if well_formed(*scenario[2:]) and not any(comma_inside(h) for h in scenario[2:]):
             assert status(scenario) == answer, scenario
@@ -105,7 +105,8 @@ def test_django_get_conditional_response_agrees_on_well_formed_requests() -> Non
         elif status(scenario) != answer:
             # Django drops malformed members and treats a field left empty as absent.
             differs += 1
-    assert compared > 2000 and differs > 50
+            let_through += answer == 200 and not well_formed(scenario[2])
+    assert compared > 2000 and differs > 50 and let_through > 20
 
 
 def test_starlette_is_not_modified_agrees_on_well_formed_requests() -> None:
