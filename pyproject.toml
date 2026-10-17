@@ -4,16 +4,16 @@ build-backend = "hatchling.build"
 
 [project]
 name = "etag"
-version = "0.2.0"
-description = "Create, parse and compare HTTP entity-tags and evaluate conditional requests per RFC 9110"
+version = "1.0.0"
+description = "Strict, typed and zero-dependency HTTP entity-tags (RFC 9110): create, parse and compare ETag values and evaluate If-Match, If-None-Match and If-Range"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
 license-files = ["LICENSE"]
 authors = [{ name = "Javier Lianes", email = "javier@lianes8studio.com" }]
-keywords = ["etag", "http", "rfc 9110", "conditional requests", "if-none-match", "if-match", "caching", "typed"]
+keywords = ["etag", "entity-tag", "http", "header", "rfc9110", "rfc7232", "conditional requests", "if-match", "if-none-match", "if-range", "304", "412", "caching", "typed"]
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
@@ -23,18 +23,22 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Internet :: WWW/HTTP",
-    "Topic :: Software Development :: Libraries",
+    "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
+    "Topic :: Software Development :: Libraries :: Python Modules",
     "Typing :: Typed",
 ]
 dependencies = []
 
 [project.optional-dependencies]
-dev = ["ruff", "mypy", "pytest", "build", "twine"]
+dev = ["ruff", "mypy", "pytest", "pytest-timeout", "build", "twine"]
+# Reference implementations that scripts/oracle_fixture.py runs; tests rerun them when installed.
+oracle = ["werkzeug==3.1.9", "django==6.1.2", "starlette==1.8.0", "aiohttp==3.14.5"]
 
 [project.urls]
 Homepage = "https://lianes8studio.com"
-Repository = "https://github.com/JaviLianes8/etag"
+Source = "https://github.com/JaviLianes8/etag"
 Issues = "https://github.com/JaviLianes8/etag/issues"
 Changelog = "https://github.com/JaviLianes8/etag/blob/main/CHANGELOG.md"
 LinkedIn = "https://www.linkedin.com/in/jlianes/"
@@ -43,12 +47,29 @@ Funding = "https://buymeacoffee.com/jlianesglrs"
 [tool.hatch.build.targets.wheel]
 packages = ["src/etag"]
 
+[tool.hatch.build.targets.sdist]
+# An explicit list, so a local virtual environment or scratch file is never packed.
+# Third-party reference files are fetched locally and never shipped; only their manifest is.
+only-include = [
+    "src",
+    "tests",
+    "scripts/fetch_upstream.py",
+    "scripts/oracle_fixture.py",
+    "README.md",
+    "GUIDE.md",
+    "CHANGELOG.md",
+    "CONTRIBUTING.md",
+    "LICENSE",
+    "requirements-dev.txt",
+]
+exclude = ["tests/upstream/*.txt", "__pycache__"]
+
 [tool.ruff]
 line-length = 100
 target-version = "py310"
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+select = ["E", "W", "F", "I", "UP", "B", "SIM", "RUF"]
 
 [tool.mypy]
 python_version = "3.10"
@@ -58,3 +79,4 @@ strict = true
 testpaths = ["tests"]
 pythonpath = ["src"]
 addopts = "-q"
+timeout = 300
