@@ -115,8 +115,8 @@ def parse_one(etag: str | EntityTag) -> EntityTag:
         return EntityTag(text(value), weak)
     if not isinstance(etag, str):
         raise TypeError(f"entity-tag must be a str or EntityTag, not {type_name(etag)}")
-    field = text(etag).strip(_OWS)
-    tag, end = _element(field, 0)
-    if end != len(field):
-        raise ValueError("expected a single entity-tag")
+    field = text(etag)
+    tag, end = _element(field, _skip_ows(field, 0))
+    if _skip_ows(field, end) != len(field):
+        raise ValueError(f"expected a single entity-tag, more at position {end}")
     return tag
