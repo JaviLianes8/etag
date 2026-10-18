@@ -2,12 +2,14 @@
 
 aiohttp and fresh answers come from tests/fixtures/oracle_runs.json (recorded by
 scripts/oracle_fixture.py); fresh is rerun live when node and the fetched copy of its
-index.js are present. nginx cannot run here, so its fetched source is read for the
-order and the comparison it applies.
+index.js are present, and the fetched Express source shows that `req.fresh` is fresh.
+nginx cannot run here, so its fetched source is read for the order and the comparison
+it applies.
 """
 
 from __future__ import annotations
 
+import json
 import re
 import shutil
 
@@ -101,6 +103,15 @@ def test_fresh_agrees_where_its_tokenizer_can_read_the_field() -> None:
         elif is_fresh is if_none_match(none_match, current):
             differs += 1
     assert compared > 150 and differs > 10
+
+
+def test_express_5_answers_req_fresh_with_fresh_2() -> None:
+    package = json.loads(read_upstream("express-package.json.txt"))
+    assert package["version"] == "5.3.0" and package["dependencies"]["fresh"] == "^2.0.0"
+    request = read_upstream("express-request.js.txt")
+    assert "var fresh = require('fresh');" in request
+    getter = request.split("defineGetter(req, 'fresh', function(){", 1)[1].split("\n});")[0]
+    assert "return fresh(this.headers, {" in getter
 
 
 def test_fresh_live_equals_the_recorded_answers() -> None:

@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
 from typing import Literal
 
-from ._parse import Header, field_value, is_wildcard, parse, parse_one
-from ._plain import check_flag, text, type_name
+from ._parse import Header, field_value, parse_one, read_field, tags, wildcard
+from ._plain import as_text, check_flag, type_name
 from ._tag import EntityTag
 
 _SAFE_FOR_304 = ("GET", "HEAD")
@@ -17,13 +16,12 @@ _IGNORE_PRECONDITIONS = ("CONNECT", "OPTIONS", "TRACE")
 def _state(etag: str | EntityTag | None, exists: bool | None) -> tuple[EntityTag | None, bool]:
     """Validate the current tag and decide whether a current representation exists."""
     current = None if etag is None else parse_one(etag)
-    if exists is not None:
-        check_flag("exists", exists)
     if exists is None:
         return current, current is not None
-    if not exists and current is not None:
+    present = check_flag("exists", exists)
+    if not present and current is not None:
         raise ValueError("exists=False contradicts a current entity-tag")
-    return current, exists
+    return current, present
 
 
 def if_match(header: Header, etag: str | EntityTag | None, *, exists: bool | None = None) -> bool:
@@ -41,15 +39,16 @@ def if_match(header: Header, etag: str | EntityTag | None, *, exists: bool | Non
     (True, False, False)
     """
     current, present = _state(etag, exists)
-    if is_wildcard(header):
+    field = field_value(header)
+    if wildcard(field):
         return present
     try:
-        tags = parse(header)
+        listed = tags(field)
     except ValueError:
         return False
     if current is None or current.weak:
         return False
-    return any(not tag.weak and tag.value == current.value for tag in tags)
+    return any(not tag.weak and tag.value == current.value for tag in listed)
 
 
 def if_none_match(
@@ -66,15 +65,16 @@ def if_none_match(
     (False, True, True)
     """
     current, present = _state(etag, exists)
-    if is_wildcard(header):
+    field = field_value(header)
+    if wildcard(field):
         return not present
     try:
-        tags = parse(header)
+        listed = tags(field)
     except ValueError:
         return True
     if current is None:
         return True
-    return not any(tag.value == current.value for tag in tags)
+    return not any(tag.value == current.value for tag in listed)
 
 
 def if_range(header: Header, etag: str | EntityTag | None) -> bool:
@@ -102,13 +102,7 @@ def if_range(header: Header, etag: str | EntityTag | None) -> bool:
 def _field(header: Header | None) -> str | None:
     """The field value, or ``None`` for a field the request did not carry."""
     # A framework's getlist() returns [] for a field the request did not carry.
-    if header is None or (
-        isinstance(header, Sequence)
-        and not isinstance(header, (str, bytes, bytearray, EntityTag))
-        and len(header) == 0
-    ):
-        return None
-    return field_value(header)
+    return None if header is None else read_field(header)
 
 
 # The keyword arguments below shadow the evaluators, so keep a reference to each.
@@ -143,15 +137,15 @@ def evaluate_preconditions(
     >>> evaluate_preconditions("PUT", None, if_none_match="*") is None
     True
     """
-    if not isinstance(method, str):
+    verb = as_text(method)
+    if verb is None:
         raise TypeError(f"method must be a str, not {type_name(method)}")
-    method = text(method)
     current, present = _state(etag, exists)
     match, none_match = _field(if_match), _field(if_none_match)
-    if method in _IGNORE_PRECONDITIONS:
+    if verb in _IGNORE_PRECONDITIONS:
         return None
     if match is not None and not _if_match(match, current, exists=present):
         return 412
     if none_match is not None and not _if_none_match(none_match, current, exists=present):
-        return 304 if method in _SAFE_FOR_304 else 412
+        return 304 if verb in _SAFE_FOR_304 else 412
     return None

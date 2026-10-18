@@ -37,9 +37,10 @@ for bad in ['"a" "b"', 'w/"a"', '*, "a"', '"a b"', "a", ""]:
 Every header argument is a `Header`: text, `bytes` or `bytearray` (decoded as Latin-1,
 the way ASGI servers hand header values over, so every octet maps to one character), or
 a list of field lines. Field lines are joined in order with a comma as section 5.3
-describes; blank lines are dropped first. In `evaluate_preconditions`, `None` or an
-empty list means the request did not carry the field, while an empty string is a field
-that is present with an empty value.
+describes; blank lines are dropped first. Each header argument is read once, a list by
+iterating it. In `evaluate_preconditions`, `None` or an empty list means the request did
+not carry the field, while an empty string is a field that is present with an empty
+value.
 
 ## Comparing entity-tags
 
@@ -109,13 +110,15 @@ Messages give a position or a type name (cut to 40 characters), never the input.
 The evaluators never raise for a malformed header: they return the outcome the RFC gives
 to a malformed field. Use `parse` or `matches` when you want the error instead.
 
-An exception raised by your own object while it is read (a list whose `__iter__` or
-`__len__` raises, a buffer that refuses to export) reaches you unchanged, also for the
-methods that ignore preconditions. An `EntityTag` is never taken for a list of field
-lines, and one built by hand with other than two fields raises `TypeError`.
+An exception raised by your own object while it is read (a list whose `__iter__`
+raises, a buffer that refuses to export) reaches you unchanged, also for the methods that
+ignore preconditions. An `EntityTag` is never taken for a list of field lines, and one
+built by hand with other than two fields raises `TypeError`.
 
 Subclasses of `str`, `bytes`, `bytearray` and `EntityTag` are read as the plain values
-they hold, so overridden methods cannot change a result.
+they hold, so overridden methods (`__buffer__` included) cannot change a result. Types
+are judged by what a value is: an object that only claims a type through a `__class__`
+property gets the `TypeError` of a wrong argument type.
 
 ## How other implementations differ
 

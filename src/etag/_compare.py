@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from ._parse import Header, is_wildcard, parse, parse_one
+from ._parse import Header, field_value, parse_one, tags, wildcard
 from ._plain import check_flag
 from ._tag import EntityTag
 
@@ -46,9 +46,10 @@ def matches(header: Header, etag: str | EntityTag, *, weak: bool = True) -> bool
     """
     check_flag("weak", weak)
     target = parse_one(etag)
-    if is_wildcard(header):
+    field = field_value(header)
+    if wildcard(field):
         return True
-    tags = parse(header)
+    listed = tags(field)
     if not weak and target.weak:
         return False
-    return any(tag.value == target.value and (weak or not tag.weak) for tag in tags)
+    return any(tag.value == target.value and (weak or not tag.weak) for tag in listed)

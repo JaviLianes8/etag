@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import hashlib
-from typing import NamedTuple
+from typing import NamedTuple, cast
 
-from ._plain import check_flag, text, type_name
+from ._plain import as_octets, as_text, check_flag, type_name
 
 
 def is_etagc(char: str) -> bool:
@@ -26,14 +26,14 @@ def format_etag(value: str, *, weak: bool = False) -> str:
     >>> format_etag("123-a", weak=True)
     'W/"123-a"'
     """
-    if not isinstance(value, str):
+    plain = as_text(value)
+    if plain is None:
         raise TypeError(f"opaque value must be a str, not {type_name(value)}")
     check_flag("weak", weak)
-    value = text(value)
-    for index, char in enumerate(value):
+    for index, char in enumerate(plain):
         if not is_etagc(char):
             raise ValueError(f"U+{ord(char):04X} is not allowed in an opaque-tag at {index}")
-    quoted = f'"{value}"'
+    quoted = f'"{plain}"'
     return f"W/{quoted}" if weak else quoted
 
 
@@ -75,19 +75,21 @@ def make_etag(data: bytes | bytearray | memoryview | str, *, weak: bool = False)
     True
     """
     check_flag("weak", weak)
-    if isinstance(data, str):
+    plain = as_text(data)
+    if plain is not None:
         try:
-            raw = memoryview(str.encode(data, "utf-8"))
+            encoded = plain.encode("utf-8")
         except UnicodeEncodeError as error:
             # Re-raised without the encoder's error, which would carry the whole text.
-            code, at = ord(str.__getitem__(data, error.start)), error.start
+            code, at = ord(plain[error.start]), error.start
             bad = f"U+{code:04X} cannot be encoded as UTF-8 at {at}"
         else:
-            return format_etag(hashlib.sha256(raw).hexdigest(), weak=weak)
+            return format_etag(hashlib.sha256(encoded).hexdigest(), weak=weak)
         raise ValueError(bad)
-    else:
-        try:
-            raw = memoryview(data)
-        except TypeError:
-            raise TypeError(f"data must be bytes-like or str, not {type_name(data)}") from None
+    octets = as_octets(data)
+    try:
+        # Any other object exporting a buffer is read through it, as documented above.
+        raw = memoryview(cast(memoryview, data) if octets is None else octets)
+    except TypeError:
+        raise TypeError(f"data must be bytes-like or str, not {type_name(data)}") from None
     return format_etag(hashlib.sha256(raw).hexdigest(), weak=weak)

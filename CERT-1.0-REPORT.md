@@ -9,6 +9,9 @@ Progress:
 - [x] Contract, fuzz and author mutation round (items 6, 9, 18)
 - [x] Docs: README, GUIDE, CHANGELOG (items 11, 12)
 - [x] Packaging, e2e and upgrade from PyPI 0.2.0 (items 8, 10, 13, 14), author run
+- [x] Second preparation pass: types judged by the real type, buffer-safe byte subclasses,
+  headers read once, Express and jshttp/fresh vectors, release script, certified badge
+- [ ] Second pass verified: gates, full suite with e2e, every Python, mutations, long fuzz
 - [ ] Five QA lenses report PASS (item 19)
 - [ ] Independent reviewer reports PASS (item 16)
 - [ ] Gates (item 15), final run

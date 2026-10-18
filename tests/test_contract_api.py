@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import inspect
 import pickle
+import typing
 from collections.abc import Callable
 from typing import Any
 
@@ -63,6 +64,12 @@ def test_the_module_exposes_nothing_public_beyond_all() -> None:
 @pytest.mark.parametrize("name", sorted(SIGNATURES))
 def test_public_names_report_the_package_as_their_module(name: str) -> None:
     assert getattr(etag, name).__module__ == "etag"
+
+
+@pytest.mark.parametrize("name", sorted(SIGNATURES))
+def test_annotations_resolve_at_run_time(name: str) -> None:
+    hints = typing.get_type_hints(getattr(etag, name))
+    assert hints and all(param in hints for param, _, _ in SIGNATURES[name])
 
 
 def test_entity_tags_pickle_and_print() -> None:

@@ -1,6 +1,12 @@
-"""Read caller values as exact built-in types and check option types."""
+"""Read caller values as exact built-in types and check option types.
+
+Types are judged by the real type of a value (``type(value)``), never by ``isinstance``,
+which believes a ``__class__`` property, and subclasses are read through the base class.
+"""
 
 from __future__ import annotations
+
+from typing import cast
 
 
 def type_name(value: object) -> str:
@@ -10,19 +16,32 @@ def type_name(value: object) -> str:
     return str.__getitem__(name, slice(0, 40))
 
 
-def text(value: str) -> str:
-    """An exact ``str`` copy, so a subclass cannot steer what is read through its methods."""
-    return str.__str__(value)
+def as_text(value: object) -> str | None:
+    """An exact ``str`` copy of a str or a subclass of it, or ``None`` for anything else."""
+    if not issubclass(type(value), str):
+        return None
+    return str.__str__(cast(str, value))
 
 
-def octets(value: bytes | bytearray) -> str:
-    """Read bytes as Latin-1, where every octet maps to the code point of the same value."""
-    if isinstance(value, bytes):
-        return bytes.decode(value, "latin-1")
-    return bytearray.decode(value, "latin-1")
+def as_octets(value: object) -> bytes | bytearray | None:
+    """The octets of bytes, a bytearray or a subclass, or ``None`` for anything else.
+
+    A subclass is copied through the base class, so an overridden ``__buffer__`` (Python
+    3.12 and later) or ``decode`` cannot change what is read.
+    """
+    kind = type(value)
+    if kind is bytes or kind is bytearray:
+        return cast("bytes | bytearray", value)
+    if issubclass(kind, bytes):
+        return bytes.__getitem__(cast(bytes, value), slice(None))
+    if issubclass(kind, bytearray):
+        return bytearray.__getitem__(cast(bytearray, value), slice(None))
+    return None
 
 
-def check_flag(name: str, value: object) -> None:
-    """Raise TypeError unless an option is a real bool."""
-    if not isinstance(value, bool):
+def check_flag(name: str, value: object) -> bool:
+    """Return an option that is a real bool, or raise TypeError."""
+    # bool cannot be subclassed, so the exact type is the only test a __class__ cannot fool.
+    if type(value) is not bool:
         raise TypeError(f"{name} must be a bool, not {type_name(value)}")
+    return value

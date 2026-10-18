@@ -1,5 +1,7 @@
 # etag
 
+[![Lianes8 Certified](https://lianes8studio.com/certified/lianes8-certified-badge.svg)](https://lianes8studio.com/certified)
+
 Create, parse and compare HTTP entity-tags (`ETag`) and evaluate the If-Match,
 If-None-Match and If-Range conditions, exactly as RFC 9110 defines them: strict
 grammar, the strong and weak comparison functions, and the 304 or 412 decision in the
@@ -118,7 +120,7 @@ is a test of this package), Werkzeug 3.1.9 reads `" * "` as a tag named `*` and 
 the empty tag `""` as `None`, so it never matches; Django 6.1.2 splits a tag such as
 `"a,b"` at its comma and drops malformed members, so a malformed If-Match can let a
 write through; aiohttp 3.14.5 stops reading a list at the first empty element and takes
-the tag `"*"` for the wildcard; and jshttp/fresh 2.0.0, behind Express's `req.fresh`,
+the tag `"*"` for the wildcard; and jshttp/fresh 2.0.0, behind `req.fresh` in Express 5,
 trims spaces but not tabs. These are examples, not the full list: the
 [guide](https://github.com/JaviLianes8/etag/blob/main/GUIDE.md) lists every difference
 the tests check, Starlette's included. `etag` is the standalone, strict and typed version
@@ -128,12 +130,13 @@ a cache or a test.
 ## Development
 
 `scripts/check.ps1` runs format, lint, `mypy --strict` and the tests. The checks against
-RFC 9110, RFC 7232, RFC 5234 and the Werkzeug, Django, jshttp/fresh and nginx sources read
-those files from `tests/upstream/`, which is not committed: `python scripts/fetch_upstream.py`
-downloads them and verifies the sha256 of each against `tests/upstream/MANIFEST.json`;
-until then those tests skip. `tests/fixtures/oracle_runs.json` holds the answers of
-Werkzeug, Django, aiohttp, Starlette and Node with fresh recorded by
-`scripts/oracle_fixture.py` (`pip install etag[oracle]` reruns them live). Set
+RFC 9110, RFC 7232, RFC 5234 and the Werkzeug, Django, jshttp/fresh, Express and nginx
+sources read those files from `tests/upstream/`, which is not committed:
+`python scripts/fetch_upstream.py` downloads them and verifies the sha256 of each against
+`tests/upstream/MANIFEST.json`; until then those tests skip.
+`tests/fixtures/oracle_runs.json` holds the answers of Werkzeug, Django, aiohttp,
+Starlette and Node with fresh recorded by `scripts/oracle_fixture.py`
+(`pip install etag[oracle]` reruns them live). Set
 `ETAG_E2E=1` to build the wheel and drive it from a fresh virtual environment, and
 `ETAG_E2E_PYPI=1` to upgrade the PyPI release in place and compare results.
 

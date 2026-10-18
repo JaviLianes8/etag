@@ -71,6 +71,24 @@
     "size": 6920,
     "sha256": "dd6ede481857e773fe391933f6b602350392d753bb685aa0dfafbb80f7638938"
   },
+  "express-request.js.txt": {
+    "title": "Express 5.3.0 lib/request.js (req.fresh)",
+    "url": "https://raw.githubusercontent.com/expressjs/express/cf6722bf89a86905281d9160b6482e08166b5ef0/lib/request.js",
+    "revision": "expressjs/express tag v5.3.0, commit cf6722bf89a86905281d9160b6482e08166b5ef0",
+    "fetched": "2026-10-18",
+    "licence": "MIT",
+    "size": 12283,
+    "sha256": "a9fda39c4472aeaa4d696f4324f58cc1d036f84ed04145d6d56a12a59578e751"
+  },
+  "express-package.json.txt": {
+    "title": "Express 5.3.0 package.json (its fresh dependency)",
+    "url": "https://raw.githubusercontent.com/expressjs/express/cf6722bf89a86905281d9160b6482e08166b5ef0/package.json",
+    "revision": "expressjs/express tag v5.3.0, commit cf6722bf89a86905281d9160b6482e08166b5ef0",
+    "fetched": "2026-10-18",
+    "licence": "MIT",
+    "size": 2731,
+    "sha256": "9645053f08f43135ec21f46ae434e49e10528c9062fde7776b150f38a2335afe"
+  },
   "nginx-not_modified.c.txt": {
     "title": "nginx 1.31.7 src/http/modules/ngx_http_not_modified_filter_module.c",
     "url": "https://raw.githubusercontent.com/nginx/nginx/28c4fc458a90c1defcfb9753ae9295740a651c40/src/http/modules/ngx_http_not_modified_filter_module.c",

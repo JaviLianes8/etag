@@ -1,4 +1,4 @@
-"""Test vectors read from the fetched Werkzeug and Django test files.
+"""Test vectors read from the fetched Werkzeug, Django and jshttp/fresh test files.
 
 The literals are extracted from the files fetched by scripts/fetch_upstream.py when the
 test runs (the tests skip when they are absent). Where those projects read malformed
@@ -13,7 +13,7 @@ import re
 import pytest
 from conftest import read_upstream
 
-from etag import EntityTag, evaluate_preconditions, format_etag, parse
+from etag import EntityTag, evaluate_preconditions, format_etag, if_none_match, parse
 
 
 def _calls(source: str, name: str) -> list[tuple[tuple[object, ...], object]]:
@@ -129,3 +129,28 @@ def test_django_conditional_processing_scenarios(
         method, tag(current), if_match=tag(match), if_none_match=tag(none_match)
     )
     assert (answer or 200) == code
+
+
+def _js_object(text: str) -> dict[str, str]:
+    """A JavaScript object literal of string values, as the fresh tests write them."""
+    pairs = re.findall(r"(?:'([^']*)'|([\w-]+)): '([^']*)'", text)
+    return {quoted or bare: value for quoted, bare, value in pairs}
+
+
+def test_fresh_if_none_match_vectors() -> None:
+    source = read_upstream("fresh-test.js.txt")
+    cases = re.findall(
+        r"var reqHeaders = (\{.*\})\n\s+var resHeaders = (\{.*\})\n\s+assert\.ok\((!?)fresh",
+        source,
+    )
+    assert len(cases) == 23
+    checked = 0
+    for request, response, negated in cases:
+        headers, served = _js_object(request), _js_object(response)
+        if "if-none-match" not in headers or "cache-control" in headers:
+            continue  # dates and Cache-Control are outside etag
+        # Section 13.2.2: If-Modified-Since is not evaluated when If-None-Match is present.
+        not_modified = not if_none_match(headers["if-none-match"], served.get("etag"))
+        assert not_modified is (negated == ""), (headers, served)
+        checked += 1
+    assert checked == 14

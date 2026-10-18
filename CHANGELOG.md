@@ -29,7 +29,12 @@ The public API is stable: `EntityTag`, `Header`, `evaluate_preconditions`, `form
   bytes-like, and raises a plain `ValueError` naming the code point for text holding a
   lone surrogate (0.2.0 raised `UnicodeEncodeError`, which carries the whole text).
 - Subclasses of `str`, `bytes`, `bytearray` and `EntityTag` are read as the plain values
-  they hold, so overridden methods cannot change a result.
+  they hold, so overridden methods (`__buffer__` included, on Python 3.12 and later)
+  cannot change a result. Types are judged by what a value is: an object that only
+  claims to be a bool, text, bytes, a list or an `EntityTag` through a `__class__`
+  property raises `TypeError`.
+- Each header argument is read once, a list of field lines by iterating it; a list that
+  yields no line means the field is absent, whatever its `__len__` says.
 - An `EntityTag` is never read as a list of field lines, and one built by hand with other
   than two fields raises `TypeError`.
 - Public names report `etag` as their module (`etag.EntityTag` in reprs and pickles);
