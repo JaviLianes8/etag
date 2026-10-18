@@ -133,8 +133,11 @@ def test_make_etag_hashes_any_contiguous_buffer() -> None:
     for bad in (1, None, ["a"], 1.5):
         with pytest.raises(TypeError, match="bytes-like or str"):
             make_etag(bad)  # type: ignore[arg-type]
-    with pytest.raises(UnicodeEncodeError):
-        make_etag("\ud800")
+    with pytest.raises(ValueError) as caught:
+        make_etag("secret\ud800")
+    assert str(caught.value) == "U+D800 cannot be encoded as UTF-8 at 6"
+    assert not isinstance(caught.value, UnicodeError)
+    assert caught.value.__context__ is None and caught.value.__cause__ is None
 
 
 def test_matches_rejects_a_malformed_list_whatever_the_target() -> None:

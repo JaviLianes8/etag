@@ -61,12 +61,13 @@ class EntityTag(NamedTuple):
 def make_etag(data: bytes | bytearray | memoryview | str, *, weak: bool = False) -> str:
     """Return a quoted entity-tag derived from ``data``.
 
-    ``data`` is hashed with SHA-256; text is encoded as UTF-8 first, and any other
-    object that exposes contiguous bytes is hashed as those bytes. The result is a
-    double-quoted opaque-tag of 64 lower-case hexadecimal digits, prefixed with ``W/``
-    when ``weak`` is set. Raises ``TypeError`` for anything else or for a ``weak`` that
-    is not a bool, and ``UnicodeEncodeError`` (a ``ValueError``) for text holding a
-    lone surrogate.
+    ``data`` is hashed with SHA-256; text is encoded as UTF-8 first. At run time any
+    other object that exposes contiguous bytes (an ``array.array``, say) is hashed as
+    those bytes too, although the annotation names only the common types. The result
+    is a double-quoted opaque-tag of 64 lower-case hexadecimal digits, prefixed with
+    ``W/`` when ``weak`` is set. Raises ``TypeError`` for anything else or for a
+    ``weak`` that is not a bool, and ``ValueError`` naming the code point and its index
+    for text holding a lone surrogate.
 
     >>> make_etag(b"abc")[:11]
     '"ba7816bf8f'
@@ -75,7 +76,14 @@ def make_etag(data: bytes | bytearray | memoryview | str, *, weak: bool = False)
     """
     check_flag("weak", weak)
     if isinstance(data, str):
-        raw = memoryview(str.encode(data, "utf-8"))
+        try:
+            raw = memoryview(str.encode(data, "utf-8"))
+        except UnicodeEncodeError as error:
+            # Re-raised without the encoder's error, which would carry the whole text.
+            bad = f"U+{ord(data[error.start]):04X} cannot be encoded as UTF-8 at {error.start}"
+        else:
+            return format_etag(hashlib.sha256(raw).hexdigest(), weak=weak)
+        raise ValueError(bad)
     else:
         try:
             raw = memoryview(data)

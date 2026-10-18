@@ -119,8 +119,8 @@ the empty tag `""` as `None`, so it never matches; Django 6.1.2 splits a tag suc
 `"a,b"` at its comma and drops malformed members, so a malformed If-Match can let a
 write through; aiohttp 3.14.5 stops reading a list at the first empty element and takes
 the tag `"*"` for the wildcard; and jshttp/fresh 2.0.0, behind Express's `req.fresh`,
-trims spaces but not tabs. On well-formed requests Django, Starlette and the rest agree
-with this package. `etag` is the standalone, strict and typed version for the times you
+trims spaces but not tabs. Apart from these differences, every one of them agrees with
+this package on the same requests. `etag` is the standalone, strict and typed version for the times you
 evaluate conditional requests yourself: in a small ASGI app, a proxy, a cache or a test.
 The [guide](https://github.com/JaviLianes8/etag/blob/main/GUIDE.md) lists every
 difference, as checked by the tests.

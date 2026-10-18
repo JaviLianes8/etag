@@ -9,8 +9,8 @@ page runs in the test suite.
 RFC 9110 section 8.8.3 defines an entity-tag as an optional, case-sensitive `W/` weak
 marker followed by an opaque-tag: a double quote, any number of `etagc` characters and a
 closing double quote. `etagc` is `!`, `#` to `~` and the obs-text range U+0080 to U+00FF,
-so a space, a double quote, a backslash or anything above U+00FF never appears inside.
-There are no escapes: the first double quote after the opening one closes the tag.
+so a space, a double quote or anything above U+00FF never appears inside. A backslash is
+an ordinary character: there are no escapes: the first double quote after the opening one closes the tag.
 
 If-Match and If-None-Match carry either `*` or a comma-separated list of entity-tags.
 Recipients skip empty list elements (section 5.6.1.2) and accept only spaces and tabs as
@@ -100,7 +100,7 @@ Messages give a position or a type name (cut to 40 characters), never the input.
 | every function taking one tag | `ValueError` | the tag is malformed, a list, or `*`; also `expected a single entity-tag` |
 | `format_etag`, `str(EntityTag)` | `ValueError` | `U+XXXX is not allowed in an opaque-tag` at an index |
 | `if_match`, `if_none_match`, `evaluate_preconditions` | `ValueError` | `exists=False` together with a tag |
-| `make_etag` | `UnicodeEncodeError` (a `ValueError`) | text holding a lone surrogate |
+| `make_etag` | `ValueError` | `U+XXXX cannot be encoded as UTF-8` at an index: text holding a lone surrogate |
 | `make_etag` | `BufferError` | a buffer that is not contiguous |
 | any function | `TypeError` | a header that is not text, bytes or a list of them; a tag that is not text or an `EntityTag`; an opaque value that is not text; `weak` or `exists` that is not a bool; a `method` that is not text; `make_etag` data that is neither text nor bytes-like |
 

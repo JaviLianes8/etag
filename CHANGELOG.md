@@ -20,19 +20,23 @@ The public API is stable: `EntityTag`, `Header`, `evaluate_preconditions`, `form
   anything else raises `TypeError` instead of being read by its truth value.
 - `evaluate_preconditions` raises `TypeError` for a `method` that is not text (0.2.0
   answered 412 for `b"GET"` where `"GET"` gets 304) and for a header that is neither `None`, text, bytes nor a
-  list of them (0.2.0 took `0` or `False` for an absent field). Header types are checked
-  for `CONNECT`, `OPTIONS` and `TRACE` too.
+  list of them (0.2.0 took `0` or `False` for an absent field). Both header types are
+  checked before anything is evaluated: for `CONNECT`, `OPTIONS` and `TRACE`, and for an
+  If-None-Match that 0.2.0 never read once If-Match had failed.
 - `matches` raises `ValueError` for a malformed header also when the target is weak and
   `weak=False` (0.2.0 returned `False`).
 - `make_etag` names the type in its `TypeError` for data that is neither text nor
-  bytes-like.
+  bytes-like, and raises a plain `ValueError` naming the code point for text holding a
+  lone surrogate (0.2.0 raised `UnicodeEncodeError`, which carries the whole text).
 - Subclasses of `str`, `bytes`, `bytearray` and `EntityTag` are read as the plain values
   they hold, so overridden methods cannot change a result.
 - Public names report `etag` as their module (`etag.EntityTag` in reprs and pickles);
   the stray `annotations` attribute of the package is gone.
 - Error messages: positions count from the start of the (joined) field value, not after
-  its leading whitespace; `format_etag` names the code point as `U+XXXX`; type names are
-  cut to 40 characters.
+  its leading whitespace; `unterminated opaque-tag` and `expected a single entity-tag`
+  now end with the position (`at position N`, `, more at position N`); `format_etag`
+  says `U+XXXX is not allowed in an opaque-tag at N` instead of quoting the character
+  and saying `at position N`; type names are cut to 40 characters.
 - `Development Status :: 5 - Production/Stable`; Python 3.14 is listed; the sdist is
   built from an explicit file list.
 
@@ -47,7 +51,8 @@ The public API is stable: `EntityTag`, `Header`, `evaluate_preconditions`, `form
 - Pass `weak=True`/`False` and `exists=True`/`False`/`None`, never `0`, `1` or strings.
 - Pass the request method as `str` (decode bytes from ASGI first).
 - Pass `None` or `[]` for a header the request did not carry.
-- Code that matched error message text must expect the new positions.
+- Code that matched error message text must expect the new wording and positions
+  listed above; catching `ValueError` and `TypeError` works as before.
 
 ## [0.2.0] - 2026-10-12
 
