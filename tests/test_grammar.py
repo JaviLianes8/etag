@@ -78,7 +78,7 @@ def test_the_wildcard_is_told_apart_from_the_star_tag() -> None:
 def test_bytes_are_decoded_as_latin_1() -> None:
     assert parse(b'"caf\xe9", W/"b"') == [EntityTag("caf\xe9"), EntityTag("b", True)]
     assert parse(bytearray(b'"a"')) == [EntityTag("a")]
-    assert parse(bytearray(b'"caféÿ"')) == [EntityTag("caféÿ")]
+    assert parse(bytearray(b'"caf\xe9\xff"')) == [EntityTag("caf\xe9\xff")]
 
 
 def test_field_lines_are_joined_in_order() -> None:
