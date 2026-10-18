@@ -79,6 +79,8 @@ def test_bytes_are_decoded_as_latin_1() -> None:
     assert parse(b'"caf\xe9", W/"b"') == [EntityTag("caf\xe9"), EntityTag("b", True)]
     assert parse(bytearray(b'"a"')) == [EntityTag("a")]
     assert parse(bytearray(b'"caf\xe9\xff"')) == [EntityTag("caf\xe9\xff")]
+    lines: list[bytes | bytearray] = [b'"caf\xe9"', bytearray(b'W/"\x80\xff"')]
+    assert parse(lines) == [EntityTag("caf\xe9"), EntityTag("\x80\xff", True)]
 
 
 def test_field_lines_are_joined_in_order() -> None:
