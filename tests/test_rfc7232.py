@@ -41,6 +41,8 @@ def test_the_examples_did_not_change(rfc7232: str, rfc9110: str) -> None:
 
     for name in ("ETag", "If-Match", "If-None-Match"):
         assert set(indented(name)) <= set(_field_lines(rfc9110, name)), name
+        extra = set(_field_lines(rfc9110, name)) - set(indented(name))
+        assert extra == ({'"34aa387-d-1568eb00"'} if name == "ETag" else set()), name
         assert indented(name), name
         for field in indented(name):
             assert parse(field)

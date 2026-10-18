@@ -119,3 +119,19 @@ def test_nginx_evaluates_if_match_strongly_before_if_none_match_weakly() -> None
     assert strong < weak
     assert "NGX_HTTP_PRECONDITION_FAILED" in body[:weak]
     assert "NGX_HTTP_NOT_MODIFIED" in body[weak:]
+    head = "ngx_http_test_if_match(ngx_http_request_t *r, ngx_table_elt_t *header,"
+    test = source.split(head, 1)[1]
+    # W/ is skipped only under "weak"; otherwise the bytes are compared as they are.
+    assert test.count("if (weak") == 2 and "ngx_strncmp(start, etag.data, etag.len)" in test
+    assert "list->len == 1 && list->data[0] == '*'" in test
+
+
+def test_aiohttp_reads_whitespace_its_own_way() -> None:
+    request = pytest.importorskip("aiohttp.web_request").BaseRequest
+
+    def values(field: str) -> list[str]:
+        return [tag.value for tag in request._if_match_or_none_impl(field)]
+
+    assert values('"a" ') == [] and ours('"a" ') == [("a", False)]
+    for field in ('"a"\x0b,\x0b"b"', '"a"\r\n,"b"'):
+        assert values(field) == ["a", "b"] and ours(field) is None

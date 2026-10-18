@@ -127,21 +127,27 @@ difference below is asserted by `tests/test_references.py` or
   well-formed request, except that Django splits at every comma, even inside a tag like
   `"a,b"`. It drops malformed members, so a malformed If-Match can let a request through
   where `etag` answers 412, and a field left without valid members counts as absent.
-- aiohttp: reads the same tags but stops at leading whitespace, an empty element or the
-  empty tag `""`; accepts `*` only without whitespace; and takes a list holding only the
-  tag `"*"` for the wildcard.
+- aiohttp: reads the same tags but stops at leading or trailing whitespace (`'"a" '`
+  reads no tag at all), an empty element or the empty tag `""`; accepts any regular
+  expression whitespace around commas, vertical tab and CR LF included, where the
+  grammar allows only spaces and tabs; accepts `*` only without whitespace; and takes a
+  list holding only the tag `"*"` for the wildcard.
 - Starlette `StaticFiles.is_not_modified`: the same answer for every well-formed
   If-None-Match without a comma inside a tag.
 - jshttp/fresh: the same answer where its tokenizer can read the value; it splits at
   every comma, trims spaces but not tabs, and takes `*` only without whitespace.
-- nginx: evaluates If-Match with the strong comparison before If-None-Match with the weak
-  one, answering 412 and 304, the same order as section 13.2.2.
+- nginx: evaluates If-Match before If-None-Match, answering 412 and 304, the same order
+  as section 13.2.2. Its If-None-Match comparison drops `W/` on both sides (weak); its
+  If-Match comparison is byte for byte, `W/` included, so `If-Match: W/"a"` matches a
+  current `W/"a"` where the strong comparison fails; and it takes `*` only without
+  whitespace.
 
 ## RFC 7232
 
 RFC 9110 obsoletes RFC 7232, the reference of `etag` 0.1. The grammar, the comparison
-table, the examples and the order of evaluation are the same in both, which
-`tests/test_rfc7232.py` checks against the fetched texts.
+table and the order of evaluation are the same in both, and every example of RFC 7232 is
+also in RFC 9110, which adds one more `ETag` example (section 3.9);
+`tests/test_rfc7232.py` checks this against the fetched texts.
 
 ## Upgrading from 0.2.0
 
