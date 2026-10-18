@@ -103,9 +103,11 @@ def test_django_get_conditional_response_agrees_on_well_formed_requests() -> Non
             assert status(scenario) == answer, scenario
             compared += 1
         elif status(scenario) != answer:
-            # Django drops malformed members and treats a field left empty as absent.
+            # Django drops malformed members and treats a field left empty as absent,
+            # so a write with a malformed If-Match goes ahead.
             differs += 1
-            let_through += answer == 200 and not well_formed(scenario[2])
+            write = scenario[0] not in ("GET", "HEAD")
+            let_through += write and answer == 200 and not well_formed(scenario[2])
     assert compared > 2000 and differs > 50 and let_through > 20
 
 

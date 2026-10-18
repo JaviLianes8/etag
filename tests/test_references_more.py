@@ -95,14 +95,16 @@ def test_fresh_agrees_where_its_tokenizer_can_read_the_field() -> None:
     if answers is None:
         pytest.skip("the fixture was recorded without node")
     pairs = oracle_fixture.fresh_pairs(RUNS["cases"])
-    compared = differs = 0
+    compared = differs = tabs = 0
     for (none_match, current), is_fresh in zip(pairs, answers, strict=True):
         if _fresh_comparable(none_match):
             assert is_fresh is not if_none_match(none_match, current), (none_match, current)
             compared += 1
         elif is_fresh is if_none_match(none_match, current):
             differs += 1
-    assert compared > 150 and differs > 10
+            # Spaces are trimmed (those fields are compared above); tabs are not.
+            tabs += _fresh_comparable(none_match.replace("\t", " "))
+    assert compared > 150 and differs > 10 and tabs > 0
 
 
 def test_express_5_answers_req_fresh_with_fresh_2() -> None:

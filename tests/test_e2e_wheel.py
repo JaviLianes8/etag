@@ -98,6 +98,7 @@ def test_the_archives_hold_exactly_the_package_and_its_sources(tmp_path: Path) -
     (sdist,) = dist.glob("etag-*.tar.gz")
     with tarfile.open(sdist) as archive:
         members = [m.split("/", 1)[1] for m in archive.getnames() if "/" in m]
+        archive.extractall(tmp_path / "sdist", filter="data")
     assert "LICENSE" in members and "GUIDE.md" in members and "PKG-INFO" in members
     assert "tests/upstream/MANIFEST.json" in members
     assert "tests/fixtures/oracle_runs.json" in members
@@ -106,3 +107,14 @@ def test_the_archives_hold_exactly_the_package_and_its_sources(tmp_path: Path) -
     stray = [m for m in members if "__pycache__" in m or m.startswith((".", "dist"))]
     assert stray == [".gitignore"]
     assert "CERT-1.0-REPORT.md" not in members and "IMPROVEMENTS-round.md" not in members
+    # Every test module ships with the scripts the tests import, so the sdist runs its suite.
+    tests = {f"tests/{path.name}" for path in (ROOT / "tests").glob("*.py")}
+    assert tests <= set(members)
+    scripts = {"fetch_upstream.py", "oracle_fixture.py", "oracle_runs.py"}
+    assert {m for m in members if m.startswith("scripts/")} == {f"scripts/{s}" for s in scripts}
+    unpacked = tmp_path / "sdist" / "etag-1.0.0"
+    collected = _run(
+        sys.executable, "-m", "pytest", "--co", "-q", "-p", "no:cacheprovider", cwd=unpacked
+    )
+    assert collected.returncode == 0, collected.stdout + collected.stderr
+    assert "tests/test_references.py::" in collected.stdout

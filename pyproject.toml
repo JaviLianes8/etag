@@ -60,6 +60,7 @@ only-include = [
     "tests",
     "scripts/fetch_upstream.py",
     "scripts/oracle_fixture.py",
+    "scripts/oracle_runs.py",
     "README.md",
     "GUIDE.md",
     "CHANGELOG.md",

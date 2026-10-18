@@ -39,9 +39,10 @@ current representation. A resource that exists but is served without an entity-t
 passes `etag=None, exists=True`. Header arguments take text, `bytes` (decoded as
 Latin-1, as ASGI servers hand them over) or a list of field lines, which are joined in
 order as section 5.3 says; `None` or an empty list means the request did not carry the
-field. `CONNECT`, `OPTIONS` and `TRACE` ignore preconditions (section 13.2.1). If you
-also support dates, check If-Unmodified-Since only when there is no If-Match, and
-If-Modified-Since only when there is no If-None-Match.
+field. `CONNECT`, `OPTIONS` and `TRACE` ignore preconditions, and a redirect or an
+error such as a 404 takes precedence over them (section 13.2.1), so call it after your
+usual checks. If you also support dates, check If-Unmodified-Since only when there is no
+If-Match, and If-Modified-Since only when there is no If-None-Match.
 
 ## Each condition on its own
 

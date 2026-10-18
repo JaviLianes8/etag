@@ -12,6 +12,7 @@ WILDCARD = "*"
 _OWS = " \t"
 
 Header: TypeAlias = str | bytes | bytearray | Sequence[str | bytes | bytearray]
+"""A header argument: text, bytes read as Latin-1, or a list of field lines to join."""
 
 
 def read_field(header: Header) -> str | None:
@@ -119,8 +120,8 @@ def parse(header: Header) -> list[EntityTag]:
     Each item is an :class:`EntityTag`, which unpacks as ``(value, weak)``. Empty list
     elements are skipped (section 5.6.1.2) and a list of field lines is joined first.
     A bare ``*`` wildcard yields ``[EntityTag("*")]``; use :func:`is_wildcard` to tell
-    it from the tag ``"*"``. Raises ``ValueError`` on malformed input or when no tag is
-    present; its message gives the position in the (joined) field value.
+    it from the tag ``"*"``. Raises ``ValueError`` when no tag is present or the input
+    is malformed, then with the position in the (joined) field value.
 
     >>> parse('"a", , W/"b"')
     [EntityTag(value='a', weak=False), EntityTag(value='b', weak=True)]

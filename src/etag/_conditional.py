@@ -123,11 +123,12 @@ def evaluate_preconditions(
     Follows the order of section 13.2.2 for the entity-tag fields of an origin server:
     If-Match first (412 when false), then If-None-Match (304 for ``GET`` and ``HEAD``,
     412 for other methods; method names are case-sensitive). ``CONNECT``, ``OPTIONS``
-    and ``TRACE`` ignore both fields (13.2.1). Pass ``None`` or an empty list for a
-    field the request did not carry; ``exists`` works as in :func:`if_match`. If you
-    also support dates, check If-Unmodified-Since only when If-Match is absent and
-    If-Modified-Since only when If-None-Match is absent. Errors are as for
-    :func:`if_match`, and a ``method`` that is not a str raises ``TypeError``.
+    and ``TRACE`` ignore both fields, and a redirect or an error your usual checks find
+    first takes precedence (13.2.1). Pass ``None`` or an empty list for a field the
+    request did not carry; ``exists`` works as in :func:`if_match`. If you also support
+    dates, check If-Unmodified-Since only when If-Match is absent and If-Modified-Since
+    only when If-None-Match is absent. Errors are as for :func:`if_match`, and a
+    ``method`` that is not a str raises ``TypeError``.
 
     >>> current = '"v2"'
     >>> evaluate_preconditions("GET", current, if_none_match='"v2"')

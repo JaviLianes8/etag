@@ -75,8 +75,11 @@ exists but is served without a tag.
 only when the request has no If-Match, If-Modified-Since only for GET and HEAD without
 If-None-Match, and If-Range (date or tag form) only for a GET with a Range. Method names
 are case-sensitive, and `CONNECT`, `OPTIONS` and `TRACE` ignore the fields (section
-13.2.1). Section 13.1.1 also lets a server answer 2xx instead of 412 when a
-state-changing request has visibly been applied already; that judgement stays yours.
+13.2.1). Call it after your usual request checks, just before acting on the request: if
+the response without the conditions would not be 2xx (a redirect, or a 404 for a GET of a
+missing resource), send that response and ignore the fields, as section 13.2.1 requires.
+Section 13.1.1 also lets a server answer 2xx instead of 412 when a state-changing request
+has visibly been applied already; that judgement stays yours.
 
 ```python
 from etag import evaluate_preconditions, if_range, make_etag
