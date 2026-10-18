@@ -110,7 +110,7 @@ def test_type_names_in_messages_are_bounded() -> None:
             format_etag("a", weak=value)
         assert len(str(caught.value)) < 120
     # The name slot of the class is reported, not what a metaclass property claims.
-    with pytest.raises(TypeError, match="not Tricky$"):
+    with pytest.raises(TypeError, match=r"not Tricky$"):
         parse(tricky)
 
 
