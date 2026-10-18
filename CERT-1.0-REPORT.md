@@ -11,10 +11,10 @@ Progress:
 - [x] Packaging, e2e and upgrade from PyPI 0.2.0 (items 8, 10, 13, 14), author run
 - [x] Second preparation pass: types judged by the real type, buffer-safe byte subclasses,
   headers read once, Express and jshttp/fresh vectors, release script, certified badge
-- [ ] Second pass verified: gates, full suite with e2e, every Python, mutations, long fuzz
+- [x] Second pass verified: gates, full suite with e2e, every Python, mutations, long fuzz
 - [ ] Five QA lenses report PASS (item 19)
 - [ ] Independent reviewer reports PASS (item 16)
-- [ ] Gates (item 15), final run
+- [x] Gates (item 15), final run (author)
 - [ ] PR and trace guard CLEAN (item 17); merge and publish left to the maintainer
 
 ## Baseline on 0.2.0 (before any change)
@@ -205,3 +205,60 @@ from a staging copy without `src` (imported from site-packages) on this PC: CPyt
 3.10.19, 3.11.5, 3.12.12, 3.13.2, 3.14.2 and 3.14.2 free-threaded, 343 passed and 8
 skipped on each (the live oracles, the opt-in end-to-end modules, the mypy check).
 CPython 3.8.20 and 3.9.25 refuse the wheel (`requires-python >=3.10`).
+
+There is no command-line interface; the end-to-end test drives the installed package
+from a separate process in an empty folder.
+
+## Second pass verified (2026-10-19)
+
+Gates and suite on a fresh clone of 47ed755 on Elena's PC, CPython 3.14, with the live
+oracles installed (`.[oracle]`): `ruff format --check .`, `ruff check .` and
+`mypy --strict src tests scripts` exit 0; `pytest` with `ETAG_E2E=1` and `ETAG_E2E_PYPI=1`
+and a 300-second per-test timeout: 496 passed, none skipped.
+
+Second author mutation round on the code changed by the second pass (`_plain`, the
+single read of headers, the `EntityTag` field checks, the surrogate error, byte
+subclasses), 22 mutations applied one at a time to a fresh clone of 47ed755 on Elena's
+PC with the same runner as above, baseline green before and after:
+
+| Id | Module | Mutation | Caught by |
+| --- | --- | --- | --- |
+| M01 | `_plain` | as_text accepts any object through str() | `test_contract_api::test_a_header_of_another_type_raises_type_error[header3]` |
+| M02 | `_plain` | as_text keeps a subclass | `test_contract_hostile::test_text_subclasses_are_read_as_their_characters` |
+| M03 | `_plain` | as_text judges by isinstance | `test_contract_types::test_a_value_claiming_another_type_gets_a_short_type_error[parse-str]` |
+| M04 | `_plain` | as_octets returns a bytes subclass as is | `test_contract_hostile::test_bytes_subclasses_are_read_as_their_octets` |
+| M05 | `_plain` | as_octets refuses bytearray subclasses | `test_contract_types::test_byte_subclasses_are_read_as_their_stored_octets[BufferArray]` |
+| M06 | `_plain` | check_flag judges by isinstance | `test_contract_types::test_a_value_claiming_to_be_a_bool_is_refused[<lambda>0-True]` |
+| M07 | `_plain` | check_flag accepts int by truth value | `test_contract_api::test_options_must_be_real_bools[<lambda>0-0]` |
+| M08 | `_parse` | empty list of field lines read as an empty value | `test_conditional::test_an_empty_list_of_field_lines_means_the_field_is_absent` |
+| M09 | `_parse` | a list of field lines iterated twice | `test_contract_types::test_field_lines_are_read_once_by_iterating_them[parse]` |
+| M10 | `_parse` | an EntityTag accepted as a list of field lines | `test_contract_hostile::test_entity_tags_are_never_headers_and_always_have_two_fields` |
+| M11 | `_parse` | parse_one skips the field count check | `test_contract_hostile::test_entity_tags_are_never_headers_and_always_have_two_fields` |
+| M12 | `_parse` | parse_one reads an EntityTag through its attributes | `test_contract_hostile::test_entity_tag_subclasses_are_read_as_their_fields` |
+| M13 | `_parse` | wildcard trims any whitespace | `test_oracle::test_random_fields_agree_with_the_grammar[0]` |
+| M14 | `_compare` | matches reads the header a second time | `test_contract_types::test_field_lines_are_read_once_by_iterating_them[<lambda>0]` |
+| M15 | `_conditional` | an empty list is a present, empty field | `test_conditional::test_an_empty_list_of_field_lines_means_the_field_is_absent` |
+| M16 | `_conditional` | exists=False with a tag accepted | `test_conditional::test_exists_false_with_a_tag_is_rejected` |
+| M17 | `_conditional` | method subclass read through its methods | `test_contract_hostile::test_a_method_subclass_cannot_pretend_to_be_get` |
+| M18 | `_tag` | surrogate error index off by one | `test_contract_api::test_make_etag_hashes_any_contiguous_buffer` |
+| M19 | `_tag` | surrogate re-raised as UnicodeEncodeError with the text | `test_contract_api::test_make_etag_hashes_any_contiguous_buffer` |
+| M20 | `_tag` | make_etag reads a bytes subclass through its buffer | `test_contract_types::test_byte_subclasses_are_read_as_their_stored_octets[BufferBytes]` |
+| M21 | `_tag` | make_etag encodes surrogates with surrogatepass | `test_contract_api::test_make_etag_hashes_any_contiguous_buffer` |
+| M22 | `_compare` | matches tests the wildcard on the raw header | `test_compare::test_matches_reads_the_wildcard_in_every_header_form` (added) |
+
+Result: 21 killed on the first run. M22 survived (only the bare `*` string was pinned
+for `matches`); `test_matches_reads_the_wildcard_in_every_header_form` now pins padded,
+byte and field-line forms and kills it (rerun on 4b60510). A first M14 that called an
+unimported name was discarded as invalid and replaced by the version in the table.
+
+Long fuzz on a fresh clone of 4b60510 on Elena's PC: the seeded property tests with 100,
+100 and 150 extra seeds (300,000 evaluator checks, 300,000 precondition checks, 600,000
+values through all thirteen fuzz calls), then 390,000 calls on raw random text and bytes
+of up to 3,000 characters: no exception other than `ValueError` or `TypeError`, slowest
+call 1.3 ms. Scaling of `parse`, `if_none_match` and `matches` on 100,000, 200,000 and
+400,000 element fields: 0.35 s, 0.72 s, 1.54 s (linear).
+
+Supported Pythons on this PC, the 4b60510 wheel installed into a fresh venv and the
+suite run from a staging copy without `src`: CPython 3.10.19, 3.11.5, 3.12.12, 3.13.2,
+3.14.2 and 3.14.2 free-threaded, 489 passed and 9 skipped on each (the live oracles,
+the opt-in end-to-end modules, the mypy check); 3.8.20 and 3.9.25 refuse the wheel.
