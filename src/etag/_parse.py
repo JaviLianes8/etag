@@ -53,17 +53,22 @@ def _line(line: object) -> str:
 
 
 def wildcard(field: str) -> bool:
-    """Report whether an exact field value is the ``*`` wildcard."""
-    return field.strip(_OWS) == WILDCARD
+    """Report whether an exact field value is the ``*`` wildcard, empty elements aside."""
+    if field.count(WILDCARD) != 1:
+        return False
+    # Section 5.6.1.2: empty list elements are ignored, so "*, " is the wildcard too, the
+    # same reading a list of field lines with a blank line gets.
+    return all(part.strip(_OWS) in ("", WILDCARD) for part in field.split(","))
 
 
 def is_wildcard(header: Header) -> bool:
     """Report whether a field value is the ``*`` wildcard (and not the tag ``"*"``).
 
-    Malformed values are not the wildcard; only a wrong argument type raises.
+    Empty list elements around it are ignored (section 5.6.1.2). Malformed values are
+    not the wildcard; only a wrong argument type raises.
 
-    >>> is_wildcard(" * "), is_wildcard('"*"'), is_wildcard('*, "a"')
-    (True, False, False)
+    >>> is_wildcard(" * "), is_wildcard("*, "), is_wildcard('"*"'), is_wildcard('*, "a"')
+    (True, True, False, False)
     """
     return wildcard(field_value(header))
 
@@ -93,6 +98,14 @@ def _skip_ows(field: str, i: int) -> int:
 
 def tags(field: str) -> list[EntityTag]:
     """Parse an exact field value; see :func:`parse`."""
+    entries = members(field)
+    if not entries:
+        raise ValueError("no entity-tag found")
+    return entries
+
+
+def members(field: str) -> list[EntityTag]:
+    """The entity-tags of an exact field value; empty for a list with no element."""
     if wildcard(field):
         return [EntityTag(WILDCARD)]
     entries: list[EntityTag] = []
@@ -109,8 +122,6 @@ def tags(field: str) -> list[EntityTag]:
         i = _skip_ows(field, i)
         if i < len(field) and field[i] != ",":
             raise ValueError(f"expected a comma at position {i}")
-    if not entries:
-        raise ValueError("no entity-tag found")
     return entries
 
 
@@ -118,10 +129,11 @@ def parse(header: Header) -> list[EntityTag]:
     """Parse a field value into its entity-tags, in order.
 
     Each item is an :class:`EntityTag`, which unpacks as ``(value, weak)``. Empty list
-    elements are skipped (section 5.6.1.2) and a list of field lines is joined first.
-    A bare ``*`` wildcard yields ``[EntityTag("*")]``; use :func:`is_wildcard` to tell
-    it from the tag ``"*"``. Raises ``ValueError`` when no tag is present or the input
-    is malformed, then with the position in the (joined) field value.
+    elements are skipped (section 5.6.1.2) and a list of field lines is joined first
+    with ``", "``, blank lines left out. The ``*`` wildcard yields ``[EntityTag("*")]``,
+    the same as the tag ``"*"``; use :func:`is_wildcard` to tell them apart. Raises
+    ``ValueError`` when no tag is present or the input is malformed, then with the
+    position in that joined field value.
 
     >>> parse('"a", , W/"b"')
     [EntityTag(value='a', weak=False), EntityTag(value='b', weak=True)]

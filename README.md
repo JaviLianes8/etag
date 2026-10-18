@@ -42,7 +42,9 @@ order as section 5.3 says; `None` or an empty list means the request did not car
 field. `CONNECT`, `OPTIONS` and `TRACE` ignore preconditions, and a redirect or an
 error such as a 404 takes precedence over them (section 13.2.1), so call it after your
 usual checks. If you also support dates, check If-Unmodified-Since only when there is no
-If-Match, and If-Modified-Since only when there is no If-None-Match.
+If-Match, If-Modified-Since only for GET and HEAD when there is no If-None-Match, and
+If-Range only for a GET with a Range (section 13.2.2; the
+[guide](https://github.com/JaviLianes8/etag/blob/main/GUIDE.md) has the details).
 
 ## Each condition on its own
 

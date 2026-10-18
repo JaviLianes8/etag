@@ -126,9 +126,10 @@ def evaluate_preconditions(
     and ``TRACE`` ignore both fields, and a redirect or an error your usual checks find
     first takes precedence (13.2.1). Pass ``None`` or an empty list for a field the
     request did not carry; ``exists`` works as in :func:`if_match`. If you also support
-    dates, check If-Unmodified-Since only when If-Match is absent and If-Modified-Since
-    only when If-None-Match is absent. Errors are as for :func:`if_match`, and a
-    ``method`` that is not a str raises ``TypeError``.
+    dates, check If-Unmodified-Since only when If-Match is absent, If-Modified-Since
+    only for ``GET`` and ``HEAD`` when If-None-Match is absent, and If-Range only for a
+    ``GET`` with a Range (13.2.2). Errors are as for :func:`if_match`, and a ``method``
+    that is not a str raises ``TypeError``.
 
     >>> current = '"v2"'
     >>> evaluate_preconditions("GET", current, if_none_match='"v2"')

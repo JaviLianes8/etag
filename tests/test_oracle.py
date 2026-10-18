@@ -18,7 +18,10 @@ ENTITY_TAG = rf'(W/)?"({ETAGC}*)"'
 OWS = r"[ \t]*"
 # Recipient list form: [ element ] *( OWS "," OWS [ element ] ), at least one element.
 LIST = rf"(?:{ENTITY_TAG})?(?:{OWS},{OWS}(?:{ENTITY_TAG})?)*"
-FIELD = re.compile(rf"{OWS}(?:\*|{LIST}){OWS}")
+# The wildcard, with only empty elements around it, which recipients skip (5.6.1.2).
+STAR = rf"(?:,{OWS})*\*(?:{OWS},)*"
+WILD = re.compile(rf"{OWS}{STAR}{OWS}")
+FIELD = re.compile(rf"{OWS}(?:{STAR}|{LIST}){OWS}")
 TAG = re.compile(ENTITY_TAG)
 
 PIECES = ['"', '"', 'W/"', "W/", "w/", ",", ", ", " ", "\t", "a", "b", "*", "\\", "\x7f"]
@@ -29,7 +32,7 @@ def oracle(field: str) -> list[EntityTag] | None:
     """The tags the grammar reads from ``field``, or ``None`` when it is invalid."""
     if FIELD.fullmatch(field) is None:
         return None
-    if field.strip(" \t") == "*":
+    if WILD.fullmatch(field):
         return [EntityTag("*")]
     tags = [EntityTag(m.group(2), m.group(1) is not None) for m in TAG.finditer(field)]
     return tags or None
@@ -56,7 +59,7 @@ def _check(field: str) -> None:
     except ValueError:
         got = None
     assert got == expected, repr(field)
-    assert is_wildcard(field) is (expected is not None and field.strip(" \t") == "*")
+    assert is_wildcard(field) is (WILD.fullmatch(field) is not None)
 
 
 @pytest.mark.parametrize("seed", range(4))

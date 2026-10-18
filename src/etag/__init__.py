@@ -1,7 +1,14 @@
 """Create, parse and compare HTTP entity-tags and evaluate conditional requests (RFC 9110).
 
 Every header argument is a :data:`Header`: text, Latin-1 bytes, or a list of field
-lines, which are joined in order with a comma.
+lines, which are joined in order with a comma. ``Header`` is a type alias for
+annotating your own code, so this paragraph is its documentation; the three forms
+below carry the same field value.
+
+>>> from etag import Header, parse
+>>> forms: list[Header] = ['"a", W/"b"', b'"a", W/"b"', ['"a"', b'W/"b"']]
+>>> [parse(form) == [("a", False), ("b", True)] for form in forms]
+[True, True, True]
 
 >>> from etag import evaluate_preconditions, make_etag
 >>> current = make_etag(b"<h1>Hello</h1>")

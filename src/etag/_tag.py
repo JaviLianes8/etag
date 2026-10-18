@@ -1,7 +1,7 @@
 """The entity-tag value type and the ways to build one (RFC 9110 section 8.8.3)."""
 
-from __future__ import annotations
-
+# No postponed annotations here: NamedTuple keeps them as written, and help() would show
+# EntityTag(value: ForwardRef('str'), ...) on Python 3.10 to 3.13.
 import hashlib
 from typing import NamedTuple, cast
 

@@ -15,14 +15,22 @@ opening one closes the tag.
 
 If-Match and If-None-Match carry either `*` or a comma-separated list of entity-tags.
 Recipients skip empty list elements (section 5.6.1.2) and accept only spaces and tabs as
-optional whitespace. `*` must stand alone: `*, "a"` is malformed.
+optional whitespace. `*` must stand alone: `*, "a"` is malformed, while empty elements
+around it are skipped like any others, so `*, ` is the wildcard, just as a list of field
+lines holding `*` and a blank line is.
+
+`parse` returns the wildcard as `EntityTag("*")`, which equals the parse of the tag `"*"`
+and whose `str()` is `"*"`. This is kept from 0.2.0 on purpose, so that `parse` always
+returns a list of `EntityTag`: call `is_wildcard` before `parse` when the difference
+matters, and never write a parsed wildcard back with `str()`.
 
 ```python
 from etag import EntityTag, is_wildcard, parse
 
 assert parse(' "a" ,, W/"b" ') == [EntityTag("a"), EntityTag("b", weak=True)]
 assert parse('"a,b"') == [EntityTag("a,b")]  # a comma inside the quotes is data
-assert is_wildcard("*") and not is_wildcard('"*"')
+assert is_wildcard("*") and is_wildcard("*, ") and not is_wildcard('"*"')
+assert parse("*") == parse('"*"') == [EntityTag("*")]  # tell them apart with is_wildcard
 for bad in ['"a" "b"', 'w/"a"', '*, "a"', '"a b"', "a", ""]:
     try:
         parse(bad)
@@ -37,10 +45,10 @@ for bad in ['"a" "b"', 'w/"a"', '*, "a"', '"a b"', "a", ""]:
 Every header argument is a `Header`: text, `bytes` or `bytearray` (decoded as Latin-1,
 the way ASGI servers hand header values over, so every octet maps to one character), or
 a list of field lines. Field lines are joined in order with a comma as section 5.3
-describes; blank lines are dropped first. Each header argument is read once, a list by
-iterating it. In `evaluate_preconditions`, `None` or an empty list means the request did
-not carry the field, while an empty string is a field that is present with an empty
-value.
+describes; blank lines are dropped first, and error positions count in the value joined
+with `", "`. Each header argument is read once, a list by iterating it. In
+`evaluate_preconditions`, `None` or an empty list means the request did not carry the
+field, while an empty string is a field that is present with an empty value.
 
 ## Comparing entity-tags
 
@@ -101,7 +109,7 @@ Messages give a position or a type name (cut to 40 characters), never the input.
 
 | Raised by | Exception | When |
 | --- | --- | --- |
-| `parse`, `matches` (header) | `ValueError` | malformed value; `expected an opaque-tag`, `unterminated opaque-tag`, `invalid character in opaque-tag` or `expected a comma` at a position in the joined value, or `no entity-tag found` |
+| `parse`, `matches` (header) | `ValueError` | malformed value; `expected an opaque-tag`, `unterminated opaque-tag`, `invalid character in opaque-tag` or `expected a comma` at a position in the joined value; for `parse` also `no entity-tag found` (`matches` returns `False` for a list with no member) |
 | every function taking one tag | `ValueError` | the tag is malformed, a list, or `*`; also `expected a single entity-tag` |
 | `format_etag`, `str(EntityTag)` | `ValueError` | `U+XXXX is not allowed in an opaque-tag` at an index |
 | `if_match`, `if_none_match`, `evaluate_preconditions` | `ValueError` | `exists=False` together with a tag |
@@ -132,18 +140,19 @@ difference below is asserted by `tests/test_references.py` or
 `tests/test_references_more.py`; everything else agrees.
 
 - Werkzeug `parse_etags`: same tags on every value `etag` accepts, except that `*` with
-  whitespace around it is read as a tag named `*`, and the empty tag `""` is stored as
-  `None`, so `is_resource_modified` never matches it. It also accepts many values the
+  whitespace or empty elements around it is read as a tag named `*`, and the empty tag
+  `""` is stored as `None`, so `is_resource_modified` never matches it. It also accepts many values the
   grammar rejects (unquoted members, a lower-case `w/`).
 - Django `parse_etags` and `get_conditional_response`: the same status for every
   well-formed request, except that Django splits at every comma, even inside a tag like
   `"a,b"`. It drops malformed members, so a malformed If-Match can let a request through
-  where `etag` answers 412, and a field left without valid members counts as absent.
+  where `etag` answers 412, and a field left without valid members counts as absent;
+  `*` with empty elements around it (`,*`) is dropped like a malformed member.
 - aiohttp: reads the same tags but stops at leading or trailing whitespace (`'"a" '`
   reads no tag at all), an empty element or the empty tag `""`; accepts any regular
   expression whitespace around commas, vertical tab and CR LF included, where the
-  grammar allows only spaces and tabs; accepts `*` only without whitespace; and takes a
-  list holding only the tag `"*"` for the wildcard.
+  grammar allows only spaces and tabs; accepts `*` only alone, without whitespace or
+  empty elements; and takes a list holding only the tag `"*"` for the wildcard.
 - Starlette `StaticFiles.is_not_modified`: the same answer for every well-formed
   If-None-Match without a comma inside a tag.
 - jshttp/fresh: the same answer where its tokenizer can read the value; it splits at
@@ -164,8 +173,10 @@ also in RFC 9110, which adds one more `ETag` example (section 3.9);
 ## Upgrading from 0.2.0
 
 Results on well-typed input are unchanged except for `matches`, which now raises for a
-malformed header also when the target is weak and `weak=False`, and for subclasses that
-override methods of `str`, `bytes` or `EntityTag`, which are now read as plain values.
+malformed header also when the target is weak and `weak=False` and returns `False` for a
+list with no member (`""`, `","`) instead of raising, for `*` with empty elements around
+it (`*, `), which is now the wildcard everywhere, and for subclasses that override
+methods of `str`, `bytes` or `EntityTag`, which are now read as plain values.
 Error positions now count from the start of the field value, not after its leading
 whitespace. Arguments of the wrong
 type now raise `TypeError` where 0.2.0 guessed: `weak` and `exists` must be real bools,

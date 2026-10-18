@@ -35,7 +35,7 @@ def well_formed(*headers: str | None) -> bool:
 
 
 def padded_wildcard(header: str | None) -> bool:
-    """The wildcard with optional whitespace around it, which some readers miss."""
+    """The wildcard with whitespace or empty elements around it, which some readers miss."""
     return header is not None and is_wildcard(header) and header != "*"
 
 

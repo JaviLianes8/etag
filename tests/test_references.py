@@ -86,7 +86,8 @@ def test_django_parse_etags_differs_only_by_splitting_inside_quotes() -> None:
         if tags is None:
             continue
         if is_wildcard(field):
-            assert answer == ["*"]
+            # Django strips whitespace but drops a "*" that has empty elements around it.
+            assert answer == (["*"] if field.strip(" \t") == "*" else []), field
         elif comma_inside(field):
             # Django splits at every comma, so a tag holding a comma is dropped.
             assert answer == [str(tag) for tag in tags if "," not in tag.value], field

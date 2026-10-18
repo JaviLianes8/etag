@@ -41,7 +41,8 @@ tags = ['"a"', 'W/"a"', '"b"', '""', '"*"']
 results = []
 for field in fields:
     forms = [field, field.encode("utf-8"), [field, '"x"']]
-    for header in forms:
+    star = field.count("*") == 1 and set(field) <= set(" \t,*") and field.strip(" \t") != "*"
+    for header in forms[2:] if star else forms:  # changed readings: see changed()
         results.append(outcome(lambda: etag.parse(header)))
         results.append(outcome(lambda: etag.is_wildcard(header)))
         for tag in tags + [None]:
@@ -52,7 +53,7 @@ for field in fields:
                 results.append(outcome(lambda: etag.evaluate_preconditions(
                     method, tag, if_match=header if rng.random() < 0.5 else None,
                     if_none_match=header)))
-        for tag in tags[:2]:
+        for tag in tags[: 0 if set(field) <= set(" \t,") and header is not forms[2] else 2]:
             results.append(outcome(lambda: etag.matches(header, tag)))
             results.append(outcome(lambda: etag.matches(header, '"a"', weak=False)))
     results.append(outcome(lambda: etag.strong_compare(field, '"a"')))
@@ -102,6 +103,9 @@ def changed():
         "unread_if_none_match": outcome(
             lambda: evaluate("PUT", '"a"', if_match='"b"', if_none_match=0)),
         "matches_weak_target": outcome(lambda: etag.matches('"a" "b"', 'W/"a"', weak=False)),
+        "matches_empty": outcome(lambda: etag.matches(" , ", '"a"')),
+        "star_among_empty": [outcome(lambda: etag.is_wildcard("*, ")),
+                             outcome(lambda: evaluate("PUT", '"a"', if_none_match=", *"))],
         "make_etag_surrogate": outcome(lambda: etag.make_etag("\ud800")),
         "text_subclass": outcome(lambda: etag.is_wildcard(Lying('"a"'))),
         "buffer_subclass": outcome(lambda: etag.parse(Buffered(b'"a"'))),
@@ -154,6 +158,8 @@ def test_upgrade_from_pypi_0_2_0_keeps_every_result(tmp_path: Path) -> None:
         "ignored_method_header": ["ok", "None"],
         "unread_if_none_match": ["ok", "412"],
         "matches_weak_target": ["ok", "False"],
+        "matches_empty": ["ValueError"],
+        "star_among_empty": [["ok", "False"], ["ok", "None"]],
         "make_etag_surrogate": ["UnicodeEncodeError"],
         "text_subclass": ["ok", "True"],
         "buffer_subclass": ["ok", f"[EntityTag(value='{buffered}', weak=False)]"],
@@ -176,6 +182,8 @@ def test_upgrade_from_pypi_0_2_0_keeps_every_result(tmp_path: Path) -> None:
         **dict.fromkeys(["ignored_method_header", "unread_if_none_match"], type_error),
         **dict.fromkeys(["entity_tag_lines", "three_fields"], type_error),
         **dict.fromkeys(["matches_weak_target", "make_etag_surrogate"], value_error),
+        "matches_empty": ["ok", "False"],
+        "star_among_empty": [["ok", "True"], ["ok", "412"]],
         "text_subclass": ["ok", "False"],
         "buffer_subclass": ["ok", "[EntityTag(value='a', weak=False)]"],
         "length_zero_list": ["ok", "412"],

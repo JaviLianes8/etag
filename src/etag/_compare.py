@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from ._parse import Header, field_value, parse_one, tags, wildcard
+from ._parse import Header, field_value, members, parse_one, wildcard
 from ._plain import check_flag
 from ._tag import EntityTag
 
@@ -37,19 +37,22 @@ def matches(header: Header, etag: str | EntityTag, *, weak: bool = True) -> bool
     ``header`` is the field value (text, bytes, or a list of field lines) and ``etag``
     is a single entity-tag. With ``weak=True`` (the default, the If-None-Match rule)
     the weak comparison is used; with ``weak=False`` (the If-Match rule) the strong one.
-    A ``*`` wildcard matches any tag. Malformed input raises ``ValueError`` and a
-    ``weak`` that is not a bool raises ``TypeError``; to apply the RFC outcome for
-    malformed requests instead, use :func:`if_match` or :func:`if_none_match`.
+    A ``*`` wildcard matches any tag, and a list with no member (``""`` or ``","``)
+    matches none. Malformed input raises ``ValueError`` and a ``weak`` that is not a
+    bool raises ``TypeError``; to apply the RFC outcome for malformed requests instead,
+    use :func:`if_match` or :func:`if_none_match`.
 
     >>> matches('W/"a", "b"', '"a"'), matches('W/"a", "b"', '"a"', weak=False)
     (True, False)
+    >>> matches("", '"a"'), matches("*", '"a"')
+    (False, True)
     """
     check_flag("weak", weak)
     target = parse_one(etag)
     field = field_value(header)
     if wildcard(field):
         return True
-    listed = tags(field)
+    listed = members(field)
     if not weak and target.weak:
         return False
     return any(tag.value == target.value and (weak or not tag.weak) for tag in listed)

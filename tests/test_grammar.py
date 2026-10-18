@@ -46,11 +46,17 @@ def test_other_whitespace_is_not_optional_whitespace(field: str) -> None:
         parse(field)
 
 
-@pytest.mark.parametrize("field", ['*, "a"', '"a", *', "*,", ", *", "*, *", "**"])
+@pytest.mark.parametrize("field", ['*, "a"', '"a", *', "*, *", "**"])
 def test_the_wildcard_only_stands_alone(field: str) -> None:
     with pytest.raises(ValueError):
         parse(field)
     assert is_wildcard(field) is False
+
+
+@pytest.mark.parametrize("field", ["*,", ", *", " ,* , ,"])
+def test_empty_elements_around_the_wildcard_are_skipped(field: str) -> None:
+    assert parse(field) == [EntityTag("*")]
+    assert is_wildcard(field) is True
 
 
 @pytest.mark.parametrize("field", ['w/"a"', 'W/ "a"', "W/", 'W"a"', '/"a"'])

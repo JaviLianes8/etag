@@ -11,7 +11,11 @@ All notable changes to this project are documented here. The format follows
 The public API is stable: `EntityTag`, `Header`, `evaluate_preconditions`, `format_etag`,
 `if_match`, `if_none_match`, `if_range`, `is_wildcard`, `make_etag`, `matches`, `parse`,
 `strong_compare` and `weak_compare` keep their names, signatures and defaults from
-0.2.0, and their results on well-formed, well-typed input are unchanged.
+0.2.0, and their results on well-formed, well-typed input are unchanged except for the
+two list readings under Changed (an empty list in `matches`, `*` among empty elements).
+`parse("*")` still returns `[EntityTag("*")]`, equal to the parse of the tag `"*"`: this
+is kept on purpose so that `parse` always returns `EntityTag` items, and `is_wildcard`
+tells the two apart.
 
 ### Changed
 
@@ -25,6 +29,14 @@ The public API is stable: `EntityTag`, `Header`, `evaluate_preconditions`, `form
   If-None-Match that 0.2.0 never read once If-Match had failed.
 - `matches` raises `ValueError` for a malformed header also when the target is weak and
   `weak=False` (0.2.0 returned `False`).
+- `matches` returns `False` for a list with no member, such as `""`, `","` or `" , ,"`
+  (0.2.0 raised `ValueError('no entity-tag found')`); `parse` still raises for them.
+- `*` with only empty list elements around it (`"*, "`, `", *"`) is the wildcard for
+  `is_wildcard`, `parse`, `matches` and the evaluators, as a list of field lines holding
+  `*` and a blank line already was (0.2.0 read the string form as malformed, so the two
+  forms gave opposite preconditions).
+- The `EntityTag` signature reads `(value: str, weak: bool = False)` in `help()` and
+  `inspect.signature` on every supported Python (it showed `ForwardRef` before 3.14).
 - `make_etag` names the type in its `TypeError` for data that is neither text nor
   bytes-like, and raises a plain `ValueError` naming the code point for text holding a
   lone surrogate (0.2.0 raised `UnicodeEncodeError`, which carries the whole text).
