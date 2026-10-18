@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from etag import EntityTag, matches, strong_compare, weak_compare
+from etag import EntityTag, Header, matches, strong_compare, weak_compare
 
 
 def test_comparisons_take_entity_tag_values() -> None:
@@ -43,3 +43,8 @@ def test_matches_raises_on_a_malformed_header() -> None:
 def test_matches_with_a_weak_target_never_matches_strongly() -> None:
     assert matches('"a", W/"a"', 'W/"a"', weak=False) is False
     assert matches('"x", W/"a"', 'W/"a"') is True
+
+
+@pytest.mark.parametrize("header", [" * ", "\t*", b"*", bytearray(b" *"), ["*"], [b"*", ""]])
+def test_matches_reads_the_wildcard_in_every_header_form(header: Header) -> None:
+    assert matches(header, '"anything"', weak=False) is True
