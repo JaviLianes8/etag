@@ -150,3 +150,26 @@ def test_exists_false_with_a_tag_is_a_value_error() -> None:
             call("*", '"a"', exists=False)
     with pytest.raises(ValueError, match="exists=False"):
         evaluate_preconditions("GET", '"a"', exists=False)
+
+
+@pytest.mark.parametrize(
+    ("call", "message"),
+    [
+        (lambda: format_etag("ab c"), "U+0020 is not allowed in an opaque-tag at 2"),
+        (lambda: parse(' "a" x'), "expected a comma at position 5"),
+        (lambda: parse('"a", b'), "expected an opaque-tag at position 5"),
+        (lambda: parse('  W/"ab'), "unterminated opaque-tag at position 4"),
+        (lambda: parse('"a"'), "invalid character in opaque-tag at position 2"),
+        (lambda: parse(" , "), "no entity-tag found"),
+        (
+            lambda: strong_compare(' "a" "b"', '"a"'),
+            "expected a single entity-tag, more at position 4",
+        ),
+    ],
+)
+def test_error_messages_give_the_documented_positions(
+    call: Callable[[], object], message: str
+) -> None:
+    with pytest.raises(ValueError) as caught:
+        call()
+    assert str(caught.value) == message
