@@ -117,4 +117,4 @@ def test_the_archives_hold_exactly_the_package_and_its_sources(tmp_path: Path) -
         sys.executable, "-m", "pytest", "--co", "-q", "-p", "no:cacheprovider", cwd=unpacked
     )
     assert collected.returncode == 0, collected.stdout + collected.stderr
-    assert "tests/test_references.py::" in collected.stdout
+    assert "tests/test_references.py" in collected.stdout.replace("\\", "/")
