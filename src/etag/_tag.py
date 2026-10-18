@@ -80,7 +80,8 @@ def make_etag(data: bytes | bytearray | memoryview | str, *, weak: bool = False)
             raw = memoryview(str.encode(data, "utf-8"))
         except UnicodeEncodeError as error:
             # Re-raised without the encoder's error, which would carry the whole text.
-            bad = f"U+{ord(data[error.start]):04X} cannot be encoded as UTF-8 at {error.start}"
+            code, at = ord(str.__getitem__(data, error.start)), error.start
+            bad = f"U+{code:04X} cannot be encoded as UTF-8 at {at}"
         else:
             return format_etag(hashlib.sha256(raw).hexdigest(), weak=weak)
         raise ValueError(bad)
