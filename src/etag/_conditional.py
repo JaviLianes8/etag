@@ -104,7 +104,7 @@ def _field(header: Header | None) -> str | None:
     # A framework's getlist() returns [] for a field the request did not carry.
     if header is None or (
         isinstance(header, Sequence)
-        and not isinstance(header, (str, bytes, bytearray))
+        and not isinstance(header, (str, bytes, bytearray, EntityTag))
         and len(header) == 0
     ):
         return None

@@ -90,14 +90,26 @@ class IteratingTag(EntityTag):
         return iter(['"a"'])
 
 
+class LyingLength(EntityTag):
+    def __len__(self) -> int:
+        return 0 if tuple.__len__(self) == 2 else 2
+
+
 def test_entity_tags_are_never_headers_and_always_have_two_fields() -> None:
     for header in (IteratingTag("x"), EntityTag("x")):
         with pytest.raises(TypeError):
             parse(header)  # type: ignore[arg-type]
     for fields in ((), ("a",), ("a", False, "zz")):
         bad = tuple.__new__(EntityTag, fields)
-        with pytest.raises(TypeError, match="two fields"):
+        with pytest.raises(TypeError, match=f"^an EntityTag has two fields, not {len(fields)}$"):
             strong_compare(bad, '"a"')
+        with pytest.raises(TypeError):
+            evaluate_preconditions("PUT", '"b"', if_match=bad)  # type: ignore[arg-type]
+    with pytest.raises(TypeError, match=r"not 1$"):
+        strong_compare(tuple.__new__(LyingLength, ("a",)), '"a"')
+    with pytest.raises(TypeError):
+        evaluate_preconditions("PUT", '"b"', if_match=LyingLength("x"))  # type: ignore[arg-type]
+    assert parse(('"a"', b'W/"b"')) == [EntityTag("a"), EntityTag("b", True)]
 
 
 def test_bytes_subclasses_are_read_as_their_octets() -> None:
