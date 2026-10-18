@@ -103,10 +103,16 @@ Messages give a position or a type name (cut to 40 characters), never the input.
 | `if_match`, `if_none_match`, `evaluate_preconditions` | `ValueError` | `exists=False` together with a tag |
 | `make_etag` | `ValueError` | `U+XXXX cannot be encoded as UTF-8` at an index: text holding a lone surrogate |
 | `make_etag` | `BufferError` | a buffer that is not contiguous |
+| `make_etag` | `ValueError` | a memoryview that was released |
 | any function | `TypeError` | a header that is not text, bytes or a list of them; a tag that is not text or an `EntityTag`; an opaque value that is not text; `weak` or `exists` that is not a bool; a `method` that is not text; `make_etag` data that is neither text nor bytes-like |
 
 The evaluators never raise for a malformed header: they return the outcome the RFC gives
 to a malformed field. Use `parse` or `matches` when you want the error instead.
+
+An exception raised by your own object while it is read (a list whose `__iter__` or
+`__len__` raises, a buffer that refuses to export) reaches you unchanged, also for the
+methods that ignore preconditions. An `EntityTag` is never taken for a list of field
+lines, and one built by hand with other than two fields raises `TypeError`.
 
 Subclasses of `str`, `bytes`, `bytearray` and `EntityTag` are read as the plain values
 they hold, so overridden methods cannot change a result.

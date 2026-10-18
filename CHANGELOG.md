@@ -30,6 +30,8 @@ The public API is stable: `EntityTag`, `Header`, `evaluate_preconditions`, `form
   lone surrogate (0.2.0 raised `UnicodeEncodeError`, which carries the whole text).
 - Subclasses of `str`, `bytes`, `bytearray` and `EntityTag` are read as the plain values
   they hold, so overridden methods cannot change a result.
+- An `EntityTag` is never read as a list of field lines, and one built by hand with other
+  than two fields raises `TypeError`.
 - Public names report `etag` as their module (`etag.EntityTag` in reprs and pickles);
   the stray `annotations` attribute of the package is gone.
 - Error messages: positions count from the start of the (joined) field value, not after

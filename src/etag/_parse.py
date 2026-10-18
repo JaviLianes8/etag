@@ -20,7 +20,7 @@ def field_value(header: Header) -> str:
         return text(header)
     if isinstance(header, (bytes, bytearray)):
         return octets(header)
-    if isinstance(header, Sequence):
+    if isinstance(header, Sequence) and not isinstance(header, EntityTag):
         # Section 5.3: field lines with the same name join with a comma. Blank lines
         # carry no element, so they are dropped rather than turned into one.
         lines = (_line(line) for line in header)
@@ -110,6 +110,8 @@ def parse_one(etag: str | EntityTag) -> EntityTag:
     """Read exactly one entity-tag, rejecting lists, empty elements and the wildcard."""
     if isinstance(etag, EntityTag):
         # The tuple slots themselves: a subclass cannot replace the fields it reports.
+        if tuple.__len__(etag) != 2:
+            raise TypeError(f"an EntityTag has two fields, not {tuple.__len__(etag)}")
         value, weak = tuple.__getitem__(etag, 0), tuple.__getitem__(etag, 1)
         if not isinstance(value, str):
             raise TypeError(f"opaque value must be a str, not {type_name(value)}")

@@ -85,6 +85,21 @@ def test_a_surrogate_is_named_from_the_text_itself() -> None:
         make_etag(LyingIndex("a\ud800"))
 
 
+class IteratingTag(EntityTag):
+    def __iter__(self):  # type: ignore[no-untyped-def]
+        return iter(['"a"'])
+
+
+def test_entity_tags_are_never_headers_and_always_have_two_fields() -> None:
+    for header in (IteratingTag("x"), EntityTag("x")):
+        with pytest.raises(TypeError):
+            parse(header)  # type: ignore[arg-type]
+    for fields in ((), ("a",), ("a", False, "zz")):
+        bad = tuple.__new__(EntityTag, fields)
+        with pytest.raises(TypeError, match="two fields"):
+            strong_compare(bad, '"a"')
+
+
 def test_bytes_subclasses_are_read_as_their_octets() -> None:
     assert parse(LyingBytes(b'"a"')) == [EntityTag("a")]
     assert is_wildcard([LyingBytes(b'"a"')]) is False
