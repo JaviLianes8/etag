@@ -138,6 +138,9 @@ def test_make_etag_hashes_any_contiguous_buffer() -> None:
     assert str(caught.value) == "U+D800 cannot be encoded as UTF-8 at 6"
     assert not isinstance(caught.value, UnicodeError)
     assert caught.value.__context__ is None and caught.value.__cause__ is None
+    # A run of surrogates is reported at its first one.
+    with pytest.raises(ValueError, match=r"^U\+D800 cannot be encoded as UTF-8 at 0$"):
+        make_etag("\ud800\udbff")
 
 
 def test_matches_rejects_a_malformed_list_whatever_the_target() -> None:

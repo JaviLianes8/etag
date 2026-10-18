@@ -10,7 +10,8 @@ RFC 9110 section 8.8.3 defines an entity-tag as an optional, case-sensitive `W/`
 marker followed by an opaque-tag: a double quote, any number of `etagc` characters and a
 closing double quote. `etagc` is `!`, `#` to `~` and the obs-text range U+0080 to U+00FF,
 so a space, a double quote or anything above U+00FF never appears inside. A backslash is
-an ordinary character: there are no escapes: the first double quote after the opening one closes the tag.
+an ordinary character, since there are no escapes, and the first double quote after the
+opening one closes the tag.
 
 If-Match and If-None-Match carry either `*` or a comma-separated list of entity-tags.
 Recipients skip empty list elements (section 5.6.1.2) and accept only spaces and tabs as

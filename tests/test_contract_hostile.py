@@ -75,6 +75,16 @@ def test_text_subclasses_are_read_as_their_characters() -> None:
     assert matches('"x"', LyingText('"a"')) is False
 
 
+class LyingIndex(str):
+    def __getitem__(self, key: object) -> str:
+        return "Z"
+
+
+def test_a_surrogate_is_named_from_the_text_itself() -> None:
+    with pytest.raises(ValueError, match=r"^U\+D800 cannot be encoded as UTF-8 at 1$"):
+        make_etag(LyingIndex("a\ud800"))
+
+
 def test_bytes_subclasses_are_read_as_their_octets() -> None:
     assert parse(LyingBytes(b'"a"')) == [EntityTag("a")]
     assert is_wildcard([LyingBytes(b'"a"')]) is False
