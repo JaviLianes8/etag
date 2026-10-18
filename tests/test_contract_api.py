@@ -98,6 +98,16 @@ def test_options_must_be_real_bools(call: Callable[[Any], object], flag: object)
         call(flag)
 
 
+def test_a_wrong_weak_is_reported_before_the_data_is_read() -> None:
+    nothing: Any = None
+    calls: list[Callable[[Any], object]] = [lambda w: make_etag("\ud800", weak=w)]
+    calls += [lambda w: make_etag(nothing, weak=w), lambda w: format_etag("a b", weak=w)]
+    calls += [lambda w: matches(nothing, "bad", weak=w)]
+    for call in calls:
+        with pytest.raises(TypeError, match=r"^weak must be a bool, not int$"):
+            call(1)
+
+
 @pytest.mark.parametrize("method", [b"GET", None, 1, ["GET"]])
 def test_the_method_must_be_text(method: object) -> None:
     with pytest.raises(TypeError, match="method must be a str"):
