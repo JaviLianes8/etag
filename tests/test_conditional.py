@@ -128,3 +128,13 @@ def test_a_resource_can_exist_without_an_entity_tag() -> None:
 def test_exists_false_with_a_tag_is_rejected() -> None:
     with pytest.raises(ValueError, match="exists=False"):
         if_match("*", '"a"', exists=False)
+
+
+@pytest.mark.parametrize(
+    ("header", "status"),
+    [((), None), ([], None), (None, None), ("", 412), (b"", 412), (bytearray(), 412)],
+)
+def test_only_none_and_empty_lists_are_absent_fields(header: object, status: int | None) -> None:
+    assert evaluate_preconditions("PUT", '"b"', if_match=header) == status  # type: ignore[arg-type]
+    # Present but empty, If-None-Match is true (no tag matches), so it never blocks.
+    assert evaluate_preconditions("PUT", None, if_none_match=header) is None  # type: ignore[arg-type]
