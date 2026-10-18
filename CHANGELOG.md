@@ -6,7 +6,7 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
-## [1.0.0] - 2026-10-18
+## [1.0.0] - 2026-10-19
 
 The public API is stable: `EntityTag`, `Header`, `evaluate_preconditions`, `format_etag`,
 `if_match`, `if_none_match`, `if_range`, `is_wildcard`, `make_etag`, `matches`, `parse`,
