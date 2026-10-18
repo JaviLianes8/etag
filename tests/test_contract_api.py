@@ -164,7 +164,9 @@ def test_matches_rejects_a_malformed_list_whatever_the_target() -> None:
     with pytest.raises(ValueError):
         matches('"a" "b"', 'W/"a"', weak=False)
     with pytest.raises(ValueError):
-        matches("", 'W/"a"', weak=False)
+        matches('"a", x', 'W/"a"', weak=False)
+    # A list with no member is valid (5.6.1.2) and simply matches nothing.
+    assert matches("", 'W/"a"', weak=False) is False
 
 
 def test_exists_false_with_a_tag_is_a_value_error() -> None:
