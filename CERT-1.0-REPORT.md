@@ -355,3 +355,9 @@ right, so the library code is unchanged and the CHANGELOG has no entry; none is 
 The five mutants were applied one at a time to a copy of the fixed tree; each is killed by
 `test_contract_lines.py` (N5, N6, N23, N28) or `test_contract_lists.py` (N15). They are
 the reviewer's patches as described in its report, rewritten here.
+
+Gates and suite on a fresh clone of cd56e52 on Elena's PC, CPython 3.14 with
+`.[dev,oracle]` and the 11 upstream files fetched by `scripts/fetch_upstream.py`:
+`ruff format --check .`, `ruff check .` and `mypy --strict src tests scripts` exit 0;
+`pytest` with `ETAG_E2E=1`, `ETAG_E2E_PYPI=1` and the 300-second per-test timeout exits 0
+on all 855 collected tests.
