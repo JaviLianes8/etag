@@ -2,10 +2,26 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+
 import pytest
 
-from etag import EntityTag, evaluate_preconditions, if_match, if_none_match, if_range, parse
+from etag import (
+    EntityTag,
+    evaluate_preconditions,
+    if_match,
+    if_none_match,
+    if_range,
+    is_wildcard,
+    parse,
+)
 
+Line = str | bytes | bytearray
+KINDS: dict[str, Callable[[str], Line]] = {
+    "str": lambda line: line,
+    "latin-1 bytes": lambda line: line.encode("latin-1"),
+    "bytearray": lambda line: bytearray(line.encode("latin-1")),
+}
 NOT_BLANK = ["\x0b", "\x0c", "\r", "\xa0", " \x0b ", "\t\x0c"]
 
 
@@ -24,10 +40,14 @@ def test_a_line_with_whitespace_other_than_space_and_tab_is_not_blank(
     assert evaluate_preconditions("GET", '"a"', if_none_match=lines) is None
 
 
-@pytest.mark.parametrize("lines", [[""], ["  "], ["\t"], ["", " \t "]])
-def test_a_list_of_blank_lines_is_a_field_sent_with_an_empty_value(lines: list[str]) -> None:
+@pytest.mark.parametrize("kind", KINDS)
+@pytest.mark.parametrize("blank", [[""], ["  "], ["\t"], ["", " \t "]])
+def test_a_list_of_blank_lines_is_a_field_sent_with_an_empty_value(
+    blank: list[str], kind: str
+) -> None:
     # Only an empty list means the field was not sent; blank lines are an empty value,
     # which no current tag matches.
+    lines = [KINDS[kind](line) for line in blank]
     assert evaluate_preconditions("PUT", '"a"', if_match=lines) == 412
     assert evaluate_preconditions("PUT", None, if_match=lines) == 412
     assert evaluate_preconditions("PUT", '"a"', if_match=[]) is None
@@ -38,19 +58,35 @@ def test_a_list_of_blank_lines_is_a_field_sent_with_an_empty_value(lines: list[s
     assert if_none_match(lines, '"a"') is True
 
 
+@pytest.mark.parametrize("kind", KINDS)
 @pytest.mark.parametrize("first", ["", " ", "\t", " \t "])
-def test_a_blank_first_line_is_dropped(first: str) -> None:
-    assert if_range([first, '"a"'], '"a"') is True
-    assert if_range([first, '"a"', first], '"a"') is True
-    assert parse([first, 'W/"b"']) == [EntityTag("b", weak=True)]
+def test_a_blank_first_line_is_dropped(first: str, kind: str) -> None:
+    line = KINDS[kind]
+    assert if_range([line(first), line('"a"')], '"a"') is True
+    assert if_range([line(first), line('"a"'), line(first)], '"a"') is True
+    assert if_match([line('"a"'), line(first)], '"a"') is True
+    assert parse([line(first), line('W/"b"')]) == [EntityTag("b", weak=True)]
     with pytest.raises(ValueError, match=r"^expected an opaque-tag at position 0$"):
-        parse([first, "x"])
+        parse([line(first), line("x")])
 
 
 def test_every_field_line_is_read_however_many_there_are() -> None:
-    lines = ['""'] * 1000 + ['"a"']
+    # Well past any round cap a reader might put on the number of lines.
+    lines = ['""'] * 100_000 + ['"a"']
     assert if_match(lines, '"a"') is True
     assert if_none_match(lines, '"a"') is False
     assert evaluate_preconditions("GET", '"a"', if_none_match=lines) == 304
     assert parse(lines)[-1] == EntityTag("a")
-    assert len(parse(lines)) == 1001
+    assert len(parse(lines)) == 100_001
+
+
+@pytest.mark.parametrize("blank", ["", " ", "\t"])
+def test_thousands_of_blank_lines_before_the_last_one_are_all_dropped(blank: str) -> None:
+    lines = [blank] * 100_000
+    assert if_match([*lines, '"a"'], '"a"') is True
+    assert if_range([*lines, '"a"'], '"a"') is True
+    assert is_wildcard([*lines, "*"]) is True
+    with pytest.raises(ValueError, match=r"^expected an opaque-tag at position 0$"):
+        parse([*lines, "x"])
+    with pytest.raises(ValueError, match=r"^expected a comma at position 4$"):
+        parse([*lines, '"a" x'])

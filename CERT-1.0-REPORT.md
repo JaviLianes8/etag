@@ -338,3 +338,20 @@ Gates and suite on a fresh clone of 8526197 on Elena's PC, CPython 3.14 with
 `ruff format --check .`, `ruff check .` and `mypy --strict src tests scripts` exit 0;
 `pytest` with `ETAG_E2E=1`, `ETAG_E2E_PYPI=1` and the 300-second per-test timeout exits 0
 on all 833 collected tests.
+
+## QA lenses, round 4 (item 19)
+
+Lens e re-checked dae38ea: its round 3 findings E1 to E7 are fixed and their nine
+mutants plus B8 and B9 are killed. Its sweep of 27 new mutants left four alive (one more
+was equivalent). All three findings are missing contracts on behaviour that was already
+right, so the library code is unchanged and the CHANGELOG has no entry; none is disputed.
+
+| Lens | Id | Finding | Change |
+| --- | --- | --- | --- |
+| e | F1 | Mutants N5, N6 (only the first 1,024 or 65,536 lines read) and N28 (blank lines kept in lists of 5,000 lines or more) survived | `test_every_field_line_is_read_however_many_there_are` now uses 100,000 field lines before the matching one; `test_thousands_of_blank_lines_before_the_last_one_are_all_dropped` puts 100,000 empty, space or tab lines before the last line and pins `if_match`, `if_range`, `is_wildcard` and the error positions 0 and 4 of a bad last line |
+| e | F2 | Mutant N15 (leading spaces of the joined value stripped) survived | The error positions test adds `[" x"]` and `["\tx"]` (position 1) and `['  "a" x']` (position 6) |
+| e | F3 | Mutant N23 (a blank bytes line read as a non-blank one) survived | `test_a_blank_first_line_is_dropped` and `test_a_list_of_blank_lines_is_a_field_sent_with_an_empty_value` run over text, Latin-1 bytes and `bytearray` lines; the first also pins a blank last line for `if_match` |
+
+The five mutants were applied one at a time to a copy of the fixed tree; each is killed by
+`test_contract_lines.py` (N5, N6, N23, N28) or `test_contract_lists.py` (N15). They are
+the reviewer's patches as described in its report, rewritten here.
