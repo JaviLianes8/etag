@@ -12,8 +12,8 @@ Progress:
 - [x] Second preparation pass: types judged by the real type, buffer-safe byte subclasses,
   headers read once, Express and jshttp/fresh vectors, release script, certified badge
 - [x] Second pass verified: gates, full suite with e2e, every Python, mutations, long fuzz
-- [ ] Five QA lenses report PASS (item 19)
-- [ ] Independent reviewer reports PASS (item 16)
+- [x] Five QA lenses report PASS (item 19)
+- [x] Independent reviewer reports PASS (item 16)
 - [x] Gates (item 15), final run (author)
 - [ ] PR and trace guard CLEAN (item 17); merge and publish left to the maintainer
 
@@ -384,3 +384,52 @@ Gates and suite on a fresh clone of 9095c5c on Elena's PC, CPython 3.14 with
 `ruff format --check .`, `ruff check .` and `mypy --strict src tests scripts` exit 0;
 `pytest` with `ETAG_E2E=1`, `ETAG_E2E_PYPI=1` and the 300-second per-test timeout exits 0
 on all 861 collected tests.
+
+## Independent review, round 2 (item 16)
+
+The independent reviewer re-checked 6f8b4c3: F1 and F2 of round 1 are fixed and there are
+no new findings. On its own fresh clone on Elena's PC, CPython 3.14 with `.[dev,oracle]`
+and the 11 upstream files verified against the manifest, the four gates exit 0, `pytest`
+gives 858 passed and 3 skipped (the opt-in end-to-end modules), and with `ETAG_E2E=1` and
+`ETAG_E2E_PYPI=1` those 3 pass. `python -m build` and `twine check --strict` pass; D23
+applied to a copy of 6f8b4c3 fails the six cases of the added contract.
+
+| Item | Verdict |
+| --- | --- |
+| 1 API stability | PASS |
+| 2 `__all__` | PASS |
+| 3 Docstrings and doctests | PASS |
+| 4 Typing | PASS |
+| 5 Errors | PASS |
+| 6 Contracts | PASS |
+| 7 Ground truth | PASS |
+| 8 Real e2e and upgrade from PyPI 0.2.0 | PASS |
+| 9 Fuzz and property tests | PASS |
+| 10 Supported Pythons | PASS |
+| 11 README | PASS |
+| 12 CHANGELOG | PASS |
+| 13 pyproject | PASS |
+| 14 sdist and wheel contents | PASS |
+| 15 Gates | PASS |
+| 16 Independent review | PASS |
+| 17 PR and trace guard | PASS (merge and publish left to the maintainer) |
+| 18 Mutations | PASS |
+| 19 Five QA lenses | PASS |
+
+## QA verdicts (item 19)
+
+Each lens ran on its own fresh clone and reported back only. The report paths are in the
+local certification folder, which is not committed.
+
+| Lens | Rounds | Final verdict | Report | Commit |
+| --- | --- | --- | --- | --- |
+| a. API and docs | 2 | PASS | `etag-cert/lens-a-r2/REPORT.md` | aa4295b |
+| b. Correctness and ground truth | 2 | PASS | `etag-cert/lens-b-r2/REPORT.md` | aa4295b |
+| c. Adversarial and robustness | 2 | PASS | `etag-cert/lens-c-r2/REPORT.md` | aa4295b |
+| d. Packaging and real e2e | 2 | PASS | `etag-cert/lens-d-r2/REPORT.md` | aa4295b |
+| e. Contract strength | 5 | PASS | `etag-cert/lens-e-r5/REPORT.md` | 38cd610 |
+| Independent reviewer | 2 | PASS | `etag-cert/review-r2/REPORT.md` | 6f8b4c3 |
+
+After aa4295b no library behaviour changed: the code change is one comment in
+`_parse.py`, GUIDE and CHANGELOG reword the buffer rule of finding N1, and the rest is
+tests and this report. Lens e (rounds 3 to 5) and the reviewer re-checked those commits.
