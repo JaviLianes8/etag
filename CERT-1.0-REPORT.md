@@ -310,3 +310,31 @@ Gates and suite on a fresh clone of 963de91 on Elena's PC, CPython 3.14 with
 `ruff format --check .`, `ruff check .` and `mypy --strict src tests scripts` exit 0;
 `pytest` with `ETAG_E2E=1`, `ETAG_E2E_PYPI=1` and the 300-second per-test timeout exits 0
 on all 797 collected tests.
+
+## QA lenses, round 3 (item 19)
+
+Lens e re-checked 28cc5d5: its round 2 finding N1 is fixed, and its sweep of 34 mutants
+on `read_field` and `_exports_buffer` left the mutants below alive. All seven open
+findings are missing contracts on behaviour that was already right, so the library code
+is unchanged and the CHANGELOG has no entry; none is disputed.
+
+| Lens | Id | Finding | Change |
+| --- | --- | --- | --- |
+| e | E1 | Mutants B8, B9 (a header `__buffer__` raising another error read as a buffer) survived | `test_an_error_of_its_own_from_a_header_buffer_reaches_the_caller`: a list whose `__buffer__` raises `RuntimeError` reaches the caller unchanged from every header reader, from `evaluate_preconditions` with `OPTIONS` and from `make_etag`; GUIDE says so |
+| e | E2 | Mutants L4, L20 (other whitespace taken as blank) survived | `test_a_line_with_whitespace_other_than_space_and_tab_is_not_blank`: VT, FF, CR and NBSP lines, as text and as Latin-1 bytes, are malformed elements for `parse`, `if_match`, `if_none_match` and `evaluate_preconditions`; GUIDE defines a blank line as empty or only spaces and tabs |
+| e | E3 | Mutant L7 (trailing spaces stripped) survived | The error positions test adds lines ending in a space, a tab, and spaces and a tab |
+| e | E4 | Mutant L11 (only blank lines read as no field) survived | `test_a_list_of_blank_lines_is_a_field_sent_with_an_empty_value`: `if_match=[""]`, `["  "]`, `["\t"]` give 412 while `[]` proceeds; for If-None-Match an empty value and an absent field both proceed, which the test pins; GUIDE says a list of only blank lines is a field sent with an empty value |
+| e | E5 | Mutant L12 (blank first line kept) survived | `test_a_blank_first_line_is_dropped` for `if_range` and `parse`, and a blank first line in the error positions test |
+| e | E6 | Mutant L16 (only the first 16 lines read) survived | `test_every_field_line_is_read_however_many_there_are`: the matching tag after 1,000 field lines |
+| e | E7 | Mutant L18 (lines holding only a comma dropped) survived | The error positions test adds `","` and `" , "` lines |
+
+The nine mutants were applied one at a time to a copy of the fixed tree; each is killed by
+`test_contract_buffers.py` (B8, B9), `test_contract_lines.py` (L4, L11, L16, L20) or
+`test_contract_lists.py` (L7, L12, L18). They are the reviewer's patches as described in
+its report, rewritten here.
+
+Gates and suite on a fresh clone of 8526197 on Elena's PC, CPython 3.14 with
+`.[dev,oracle]` and the 11 upstream files fetched by `scripts/fetch_upstream.py`:
+`ruff format --check .`, `ruff check .` and `mypy --strict src tests scripts` exit 0;
+`pytest` with `ETAG_E2E=1`, `ETAG_E2E_PYPI=1` and the 300-second per-test timeout exits 0
+on all 833 collected tests.
