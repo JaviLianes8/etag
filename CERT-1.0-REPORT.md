@@ -15,7 +15,7 @@ Progress:
 - [x] Five QA lenses report PASS (item 19)
 - [x] Independent reviewer reports PASS (item 16)
 - [x] Gates (item 15), final run (author)
-- [ ] PR and trace guard CLEAN (item 17); merge and publish left to the maintainer
+- [x] PR and trace guard CLEAN (item 17); merge and publish left to the maintainer
 
 ## Baseline on 0.2.0 (before any change)
 
