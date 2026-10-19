@@ -285,3 +285,9 @@ Five independent lenses ran on 4f57fe5. Every finding was fixed; none is dispute
 Each new contract was first run red: P12, X15, X5 and the buffer reading were applied
 one at a time to a copy of the fixed tree and each is killed by
 `test_contract_strict.py`, `test_contract_lists.py` or `test_contract_buffers.py`.
+
+Gates and suite on a fresh clone of 760b2cd on Elena's PC, CPython 3.14 with
+`.[dev,oracle]` and the upstream files fetched by `scripts/fetch_upstream.py`:
+`ruff format --check .`, `ruff check .` and `mypy --strict src tests scripts` exit 0;
+`pytest` with `ETAG_E2E=1`, `ETAG_E2E_PYPI=1` and the 300-second per-test timeout exits 0
+on all 776 collected tests.
