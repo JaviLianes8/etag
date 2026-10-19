@@ -117,6 +117,13 @@ def test_methods_without_a_representation_ignore_preconditions(method: str) -> N
     assert evaluate_preconditions(method, '"a"', if_match='"b"', if_none_match="*") is None
 
 
+@pytest.mark.parametrize("method", ["connect", "options", "trace", "Trace", "Options", "cONNECT"])
+def test_only_the_upper_case_ignored_methods_skip_preconditions(method: str) -> None:
+    # Method names are case-sensitive (RFC 9110 9.1): "trace" is some other method.
+    assert evaluate_preconditions(method, '"a"', if_match='"b"') == 412
+    assert evaluate_preconditions(method, '"a"', if_none_match='"a"') == 412
+
+
 def test_a_resource_can_exist_without_an_entity_tag() -> None:
     assert if_match("*", None, exists=True) is True
     assert if_match('"a"', None, exists=True) is False

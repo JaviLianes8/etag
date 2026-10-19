@@ -182,12 +182,15 @@ end-to-end modules left out; baseline green before and after each batch.
 | D21 | `_conditional` | falsy header counted as absent | `test_conditional::test_an_empty_list_of_field_lines_means_the_field_is_absent` |
 | D22 | `_conditional` | If-None-Match strong current only | `test_properties::test_the_evaluators_are_the_comparisons_on_valid_fields[0]` |
 | I01 | `__init__` | public names keep private modules | `test_contract_api::test_public_names_report_the_package_as_their_module[EntityTag]` |
-70
+| D23 | `_conditional` | method upper-cased before the ignore check | `test_conditional::test_only_the_upper_case_ignored_methods_skip_preconditions[connect]` (added) |
 
 Result: 65 killed on the first run. T15, P02 and P06 survived and are now killed by the
 contracts marked "added" (each confirmed to fail on its mutant). T12 and R12 are
 equivalent: `make_etag` and `parse_one` pass `weak` on to `format_etag`, which raises
 the same `TypeError` with the same message.
+
+D23 was found alive by the independent review (round 1) after this round and is now
+killed by the contract marked "added", confirmed to fail on its mutant (see below).
 
 ## Packaging and e2e (items 8, 10, 13, 14), author run
 
