@@ -80,6 +80,13 @@ class _RefusingBuffer:
         raise BufferError("export refused")
 
 
+class _FailingBuffer(_RefusingBuffer):
+    """A list of one field line whose buffer export fails with an error of its own."""
+
+    def __buffer__(self, flags: int) -> memoryview:
+        raise RuntimeError("buffer broke")
+
+
 Sequence.register(_RefusingBuffer)
 
 
@@ -96,6 +103,19 @@ def test_a_header_that_refuses_to_export_its_buffer_is_still_a_buffer(reader: st
     # when the export itself fails.
     with pytest.raises(TypeError, match=r"^header must be str, bytes or a list of them, not "):
         READERS[reader](_RefusingBuffer())
+
+
+@pytest.mark.skipif(sys.version_info < (3, 12), reason="__buffer__ is honoured from 3.12")
+@pytest.mark.parametrize("reader", sorted(READERS))
+def test_an_error_of_its_own_from_a_header_buffer_reaches_the_caller(reader: str) -> None:
+    # Only BufferError and a released view mean "a buffer"; anything else is the
+    # object's own failure and is not turned into the header TypeError.
+    with pytest.raises(RuntimeError, match=r"^buffer broke$"):
+        READERS[reader](_FailingBuffer())
+    with pytest.raises(RuntimeError, match=r"^buffer broke$"):
+        evaluate_preconditions("OPTIONS", '"a"', if_match=_FailingBuffer())  # type: ignore[arg-type]
+    with pytest.raises(RuntimeError, match=r"^buffer broke$"):
+        make_etag(_FailingBuffer())  # type: ignore[arg-type]
 
 
 def test_make_etag_lets_a_refused_buffer_export_reach_the_caller() -> None:

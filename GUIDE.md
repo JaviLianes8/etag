@@ -45,10 +45,14 @@ for bad in ['"a" "b"', 'w/"a"', '*, "a"', '"a b"', "a", ""]:
 Every header argument is a `Header`: text, `bytes` or `bytearray` (decoded as Latin-1,
 the way ASGI servers hand header values over, so every octet maps to one character), or
 a list of field lines. Field lines are joined in order with a comma as section 5.3
-describes; blank lines are dropped first, and error positions count in the value joined
-with `", "`. Each header argument is read once, a list by iterating it. In
+describes; blank lines (empty, or only spaces and tabs) are dropped first, and error
+positions count in the value joined with `", "` from the lines as given, trailing spaces
+and lines holding only a comma included. A line with any other whitespace, such as a vertical tab, a carriage
+return or a no-break space, is not blank but a malformed element. Every line is read,
+however many there are. Each header argument is read once, a list by iterating it. In
 `evaluate_preconditions`, `None` or an empty list means the request did not carry the
-field, while an empty string is a field that is present with an empty value.
+field, while an empty string or a list of only blank lines is a field that is present
+with an empty value.
 
 ## Comparing entity-tags
 
@@ -126,7 +130,8 @@ raises, data for `make_etag` whose buffer refuses to export) reaches you unchang
 for the methods that ignore preconditions. A header is the exception: an object that
 offers a buffer is bytes-like, never a list of field lines, so a released `memoryview`
 or a header whose `__buffer__` fails with `BufferError` (Python 3.12 and later) gets
-the header `TypeError` like any other buffer. An `EntityTag` is never taken for a list of
+the header `TypeError` like any other buffer; any other exception from that `__buffer__`
+reaches you unchanged. An `EntityTag` is never taken for a list of
 field lines, and one built by hand with other than two fields raises `TypeError`.
 
 Subclasses of `str`, `bytes`, `bytearray` and `EntityTag` are read as the plain values
