@@ -433,3 +433,15 @@ local certification folder, which is not committed.
 After aa4295b no library behaviour changed: the code change is one comment in
 `_parse.py`, GUIDE and CHANGELOG reword the buffer rule of finding N1, and the rest is
 tests and this report. Lens e (rounds 3 to 5) and the reviewer re-checked those commits.
+
+## Final run (items 8, 14, 15)
+
+Fresh clone of `release/1.0.0` from GitHub at d79a849 on this PC, CPython 3.13.2, a new
+venv with `.[dev,oracle]` and the 11 upstream files verified against the manifest:
+`ruff format --check .`, `ruff check .`, `mypy --strict src` (and `src tests scripts`)
+exit 0; `pytest` with the 300-second per-test timeout: 858 passed, 3 skipped (the opt-in
+end-to-end modules), and with `ETAG_E2E=1` and `ETAG_E2E_PYPI=1` those 3 pass.
+`python -m build` gives `etag-1.0.0-py3-none-any.whl` (six modules, `py.typed`, LICENSE)
+and `etag-1.0.0.tar.gz` (48 entries); `twine check --strict` passes for both. The wheel
+installed into a throwaway venv imports from site-packages as 1.0.0, and the whole suite
+run from a copy of the clone without `src` gives 858 passed and the same 3 skipped.
