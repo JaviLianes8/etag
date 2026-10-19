@@ -48,7 +48,7 @@ def _exports_buffer(value: object) -> bool:
     except TypeError:
         return False
     except (ValueError, BufferError):
-        return True  # a released or non-contiguous buffer is still a buffer
+        return True  # a released buffer, or one that refuses to export, is still a buffer
     return True
 
 

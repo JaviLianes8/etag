@@ -82,6 +82,10 @@ def test_the_parsed_wildcard_equals_the_tag_star_by_design() -> None:
         (['"a"', "", '"b" x'], "expected a comma at position 9"),
         ([b'"a"', b'"b\x7f"'], "invalid character in opaque-tag at position 7"),
         (['"a"', '"b'], "unterminated opaque-tag at position 5"),
+        (['"a"', "  ", "x"], "expected an opaque-tag at position 5"),
+        (['"a"', "	", "x"], "expected an opaque-tag at position 5"),
+        (['"a"', " 	 ", "x"], "expected an opaque-tag at position 5"),
+        (['"a"', " 	x"], "expected an opaque-tag at position 7"),
     ],
 )
 def test_error_positions_count_in_the_lines_joined_with_comma_space(

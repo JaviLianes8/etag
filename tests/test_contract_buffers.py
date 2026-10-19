@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import array
-from collections.abc import Callable
+import sys
+from collections.abc import Callable, Iterator, Sequence
 
 import pytest
 
@@ -55,6 +56,53 @@ def test_a_buffer_header_is_a_header_level_type_error(reader: str, index: int) -
     header = _buffers()[index]
     with pytest.raises(TypeError, match=r"^header must be str, bytes or a list of them, not "):
         READERS[reader](header)
+
+
+def _released() -> memoryview:
+    view = memoryview(b'"a"')
+    view.release()
+    return view
+
+
+class _RefusingBuffer:
+    """A list of one field line whose buffer export fails, as a busy buffer's does."""
+
+    def __getitem__(self, index: int) -> str:
+        return ['"a"'][index]
+
+    def __len__(self) -> int:
+        return 1
+
+    def __iter__(self) -> Iterator[str]:
+        return iter(['"a"'])
+
+    def __buffer__(self, flags: int) -> memoryview:
+        raise BufferError("export refused")
+
+
+Sequence.register(_RefusingBuffer)
+
+
+@pytest.mark.parametrize("reader", sorted(READERS))
+def test_a_released_memoryview_header_is_a_header_level_type_error(reader: str) -> None:
+    with pytest.raises(TypeError, match=r"^header must be str, bytes or a list of them, not "):
+        READERS[reader](_released())
+
+
+@pytest.mark.skipif(sys.version_info < (3, 12), reason="__buffer__ is honoured from 3.12")
+@pytest.mark.parametrize("reader", sorted(READERS))
+def test_a_header_that_refuses_to_export_its_buffer_is_still_a_buffer(reader: str) -> None:
+    # Exporting a buffer at all makes it bytes-like, not a list of field lines, even
+    # when the export itself fails.
+    with pytest.raises(TypeError, match=r"^header must be str, bytes or a list of them, not "):
+        READERS[reader](_RefusingBuffer())
+
+
+def test_make_etag_lets_a_refused_buffer_export_reach_the_caller() -> None:
+    if sys.version_info < (3, 12):
+        pytest.skip("__buffer__ is honoured from 3.12")
+    with pytest.raises(BufferError, match=r"^export refused$"):
+        make_etag(_RefusingBuffer())
 
 
 def test_a_buffer_field_line_is_a_field_line_type_error() -> None:

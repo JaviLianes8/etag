@@ -122,9 +122,12 @@ The evaluators never raise for a malformed header: they return the outcome the R
 to a malformed field. Use `parse` or `matches` when you want the error instead.
 
 An exception raised by your own object while it is read (a list whose `__iter__`
-raises, a buffer that refuses to export) reaches you unchanged, also for the methods that
-ignore preconditions. An `EntityTag` is never taken for a list of field lines, and one
-built by hand with other than two fields raises `TypeError`.
+raises, data for `make_etag` whose buffer refuses to export) reaches you unchanged, also
+for the methods that ignore preconditions. A header is the exception: an object that
+offers a buffer is bytes-like, never a list of field lines, so a released `memoryview`
+or a header whose `__buffer__` fails with `BufferError` (Python 3.12 and later) gets
+the header `TypeError` like any other buffer. An `EntityTag` is never taken for a list of
+field lines, and one built by hand with other than two fields raises `TypeError`.
 
 Subclasses of `str`, `bytes`, `bytearray` and `EntityTag` are read as the plain values
 they hold, so overridden methods (`__buffer__` included) cannot change a result. Types

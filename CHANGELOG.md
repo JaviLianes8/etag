@@ -37,7 +37,9 @@ tells the two apart.
   forms gave opposite preconditions).
 - A `memoryview` or an `array.array` passed as a header raises the header `TypeError`
   instead of being read as a list of field lines, which took a
-  `memoryview(b"*").cast("c")` for the wildcard.
+  `memoryview(b"*").cast("c")` for the wildcard. A released `memoryview`, or a list
+  whose `__buffer__` fails with `BufferError` (Python 3.12 and later), raises the same
+  `TypeError`.
 - The `EntityTag` signature reads `(value: str, weak: bool = False)` in `help()` and
   `inspect.signature` on every supported Python (it showed `ForwardRef` before 3.14).
 - `make_etag` names the type in its `TypeError` for data that is neither text nor
