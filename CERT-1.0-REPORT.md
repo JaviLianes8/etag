@@ -291,3 +291,22 @@ Gates and suite on a fresh clone of 760b2cd on Elena's PC, CPython 3.14 with
 `ruff format --check .`, `ruff check .` and `mypy --strict src tests scripts` exit 0;
 `pytest` with `ETAG_E2E=1`, `ETAG_E2E_PYPI=1` and the 300-second per-test timeout exits 0
 on all 776 collected tests.
+
+## QA lenses, round 2 (item 19)
+
+Lens e re-checked aa4295b: its round 1 findings F1 to F3 are fixed, and its sweep of the
+changed code left six mutants alive. Both findings are fixed; none is disputed.
+
+| Lens | Id | Finding | Change |
+| --- | --- | --- | --- |
+| e | N1 | Mutants B2, B3, B4 on the header buffer check survived; GUIDE said a buffer that refuses to export reaches the caller unchanged, while a header gets the `TypeError` | Kept the code: an object offering a buffer is never read as field lines. GUIDE now limits the "reaches you unchanged" rule to `make_etag` data and says a released `memoryview` or a header whose `__buffer__` raises `BufferError` (3.12 and later) gets the header `TypeError`; CHANGELOG says the same. `test_contract_buffers.py` pins both cases for every header reader and pins that `make_etag` lets the refused export through |
+| e | N2 | Mutants L2, L3, L5 on blank-line dropping survived | `test_error_positions_count_in_the_lines_joined_with_comma_space` adds a line of spaces, a line of tabs, a line of mixed spaces and tabs, and a line that starts with spaces and a tab |
+
+The six mutants were applied one at a time to a copy of the fixed tree; each is killed by
+`test_contract_buffers.py` (B2, B3, B4) or `test_contract_lists.py` (L2, L3, L5).
+
+Gates and suite on a fresh clone of 963de91 on Elena's PC, CPython 3.14 with
+`.[dev,oracle]` and the 11 upstream files fetched by `scripts/fetch_upstream.py`:
+`ruff format --check .`, `ruff check .` and `mypy --strict src tests scripts` exit 0;
+`pytest` with `ETAG_E2E=1`, `ETAG_E2E_PYPI=1` and the 300-second per-test timeout exits 0
+on all 797 collected tests.
