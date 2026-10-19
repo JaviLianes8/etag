@@ -117,6 +117,13 @@ def test_methods_without_a_representation_ignore_preconditions(method: str) -> N
     assert evaluate_preconditions(method, '"a"', if_match='"b"', if_none_match="*") is None
 
 
+@pytest.mark.parametrize("method", ["connect", "options", "trace", "Trace", "Options", "cONNECT"])
+def test_only_the_upper_case_ignored_methods_skip_preconditions(method: str) -> None:
+    # Method names are case-sensitive (RFC 9110 9.1): "trace" is some other method.
+    assert evaluate_preconditions(method, '"a"', if_match='"b"') == 412
+    assert evaluate_preconditions(method, '"a"', if_none_match='"a"') == 412
+
+
 def test_a_resource_can_exist_without_an_entity_tag() -> None:
     assert if_match("*", None, exists=True) is True
     assert if_match('"a"', None, exists=True) is False
@@ -128,3 +135,13 @@ def test_a_resource_can_exist_without_an_entity_tag() -> None:
 def test_exists_false_with_a_tag_is_rejected() -> None:
     with pytest.raises(ValueError, match="exists=False"):
         if_match("*", '"a"', exists=False)
+
+
+@pytest.mark.parametrize(
+    ("header", "status"),
+    [((), None), ([], None), (None, None), ("", 412), (b"", 412), (bytearray(), 412)],
+)
+def test_only_none_and_empty_lists_are_absent_fields(header: object, status: int | None) -> None:
+    assert evaluate_preconditions("PUT", '"b"', if_match=header) == status  # type: ignore[arg-type]
+    # Present but empty, If-None-Match is true (no tag matches), so it never blocks.
+    assert evaluate_preconditions("PUT", None, if_none_match=header) is None  # type: ignore[arg-type]

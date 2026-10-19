@@ -46,11 +46,17 @@ def test_other_whitespace_is_not_optional_whitespace(field: str) -> None:
         parse(field)
 
 
-@pytest.mark.parametrize("field", ['*, "a"', '"a", *', "*,", ", *", "*, *", "**"])
+@pytest.mark.parametrize("field", ['*, "a"', '"a", *', "*, *", "**"])
 def test_the_wildcard_only_stands_alone(field: str) -> None:
     with pytest.raises(ValueError):
         parse(field)
     assert is_wildcard(field) is False
+
+
+@pytest.mark.parametrize("field", ["*,", ", *", " ,* , ,"])
+def test_empty_elements_around_the_wildcard_are_skipped(field: str) -> None:
+    assert parse(field) == [EntityTag("*")]
+    assert is_wildcard(field) is True
 
 
 @pytest.mark.parametrize("field", ['w/"a"', 'W/ "a"', "W/", 'W"a"', '/"a"'])
@@ -78,6 +84,9 @@ def test_the_wildcard_is_told_apart_from_the_star_tag() -> None:
 def test_bytes_are_decoded_as_latin_1() -> None:
     assert parse(b'"caf\xe9", W/"b"') == [EntityTag("caf\xe9"), EntityTag("b", True)]
     assert parse(bytearray(b'"a"')) == [EntityTag("a")]
+    assert parse(bytearray(b'"caf\xe9\xff"')) == [EntityTag("caf\xe9\xff")]
+    lines: list[bytes | bytearray] = [b'"caf\xe9"', bytearray(b'W/"\x80\xff"')]
+    assert parse(lines) == [EntityTag("caf\xe9"), EntityTag("\x80\xff", True)]
 
 
 def test_field_lines_are_joined_in_order() -> None:

@@ -6,6 +6,7 @@ Slow and needs the build backend, so it runs only with ETAG_E2E=1.
 from __future__ import annotations
 
 import os
+import re
 import subprocess
 import sys
 import venv
@@ -25,6 +26,7 @@ import etag
 from etag import EntityTag, evaluate_preconditions, format_etag, if_range, make_etag, parse
 
 assert etag.__file__.find("site-packages") != -1, etag.__file__
+assert etag.__version__ == "1.0.0" and EntityTag.__module__ == "etag"
 assert importlib.metadata.version("etag") == etag.__version__
 assert importlib.resources.files("etag").joinpath("py.typed").is_file()
 
@@ -42,6 +44,13 @@ for bad in ('"a" "b"', '*, "a"', 'w/"a"'):
         pass
     else:
         raise AssertionError(bad)
+for bad in (lambda: format_etag("a", weak=1), lambda: evaluate_preconditions(b"GET", None)):
+    try:
+        bad()
+    except TypeError:
+        pass
+    else:
+        raise AssertionError("expected TypeError")
 print("e2e ok")
 """
 
@@ -71,3 +80,46 @@ def test_installed_wheel_end_to_end(tmp_path: Path) -> None:
     result = _run(python, "-I", "-c", PROGRAM, cwd=work)
     assert result.returncode == 0, result.stderr
     assert result.stdout.strip() == "e2e ok"
+
+
+def test_the_archives_hold_exactly_the_package_and_its_sources(tmp_path: Path) -> None:
+    import tarfile
+    import zipfile
+
+    dist = tmp_path / "dist"
+    built = _run(sys.executable, "-m", "build", "--outdir", dist, ROOT)
+    assert built.returncode == 0, built.stderr
+    (wheel,) = dist.glob("etag-*.whl")
+    with zipfile.ZipFile(wheel) as archive:
+        names = archive.namelist()
+    package = sorted(n for n in names if not n.startswith("etag-1.0.0.dist-info/"))
+    modules = ["__init__", "_compare", "_conditional", "_parse", "_plain", "_tag"]
+    assert package == sorted([*(f"etag/{m}.py" for m in modules), "etag/py.typed"])
+    assert "etag-1.0.0.dist-info/licenses/LICENSE" in names
+    (sdist,) = dist.glob("etag-*.tar.gz")
+    with tarfile.open(sdist) as archive:
+        members = [m.split("/", 1)[1] for m in archive.getnames() if "/" in m]
+        archive.extractall(tmp_path / "sdist", filter="data")
+    assert "LICENSE" in members and "GUIDE.md" in members and "PKG-INFO" in members
+    assert "tests/upstream/MANIFEST.json" in members
+    assert "tests/fixtures/oracle_runs.json" in members
+    assert not [m for m in members if m.startswith("tests/upstream/") and m.endswith(".txt")]
+    # hatchling always adds .gitignore; nothing else outside the list may slip in.
+    stray = [m for m in members if "__pycache__" in m or m.startswith((".", "dist"))]
+    assert stray == [".gitignore"]
+    assert "CERT-1.0-REPORT.md" not in members and "IMPROVEMENTS-round.md" not in members
+    # Every test module ships with the scripts the tests import, so the sdist runs its suite.
+    tests = {f"tests/{path.name}" for path in (ROOT / "tests").glob("*.py")}
+    assert tests <= set(members)
+    scripts = {"check.ps1", "fetch_upstream.py", "oracle_fixture.py", "oracle_runs.py"}
+    assert {m for m in members if m.startswith("scripts/")} == {f"scripts/{s}" for s in scripts}
+    # Every script the shipped docs tell a reader to run is in the sdist.
+    for doc in ("README.md", "CONTRIBUTING.md"):
+        named = set(re.findall(r"scripts/[\w.]+", (ROOT / doc).read_text(encoding="utf-8")))
+        assert named and named <= set(members), (doc, named - set(members))
+    unpacked = tmp_path / "sdist" / "etag-1.0.0"
+    collected = _run(
+        sys.executable, "-m", "pytest", "--co", "-q", "-p", "no:cacheprovider", cwd=unpacked
+    )
+    assert collected.returncode == 0, collected.stdout + collected.stderr
+    assert "tests/test_references.py" in collected.stdout.replace("\\", "/")

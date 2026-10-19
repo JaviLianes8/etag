@@ -1,0 +1,101 @@
+{
+  "rfc9110.txt": {
+    "title": "RFC 9110, HTTP Semantics (June 2022)",
+    "url": "https://www.rfc-editor.org/rfc/rfc9110.txt",
+    "revision": "RFC 9110 as published (RFCs are immutable)",
+    "fetched": "2026-10-17",
+    "licence": "IETF Trust Legal Provisions",
+    "size": 502941,
+    "sha256": "21c1cdce6ab0e5509b04d84a28000836c7a087cf786efe6f04877ebfff47232a"
+  },
+  "rfc7232.txt": {
+    "title": "RFC 7232, HTTP/1.1 Conditional Requests (June 2014, obsoleted by RFC 9110)",
+    "url": "https://www.rfc-editor.org/rfc/rfc7232.txt",
+    "revision": "RFC 7232 as published (RFCs are immutable)",
+    "fetched": "2026-10-17",
+    "licence": "IETF Trust Legal Provisions",
+    "size": 56696,
+    "sha256": "3788e183becfbdaf93121082cd90ac7c1324e871fe425438805942a10207b1b4"
+  },
+  "rfc5234.txt": {
+    "title": "RFC 5234, Augmented BNF for Syntax Specifications: ABNF (January 2008)",
+    "url": "https://www.rfc-editor.org/rfc/rfc5234.txt",
+    "revision": "RFC 5234 as published (RFCs are immutable)",
+    "fetched": "2026-10-17",
+    "licence": "IETF Trust Legal Provisions",
+    "size": 26359,
+    "sha256": "fc871020f53baa6b60fc6835c557b433f38d53c5cc41ab56d03622b084f53a12"
+  },
+  "werkzeug-test_http.py.txt": {
+    "title": "Werkzeug 3.1.9 tests/test_http.py (entity-tag tests)",
+    "url": "https://raw.githubusercontent.com/pallets/werkzeug/6604c3b8784ecc7cf5ac0b7412d916989b4c7d45/tests/test_http.py",
+    "revision": "pallets/werkzeug tag 3.1.9, commit 6604c3b8784ecc7cf5ac0b7412d916989b4c7d45",
+    "fetched": "2026-10-17",
+    "licence": "BSD-3-Clause",
+    "size": 30638,
+    "sha256": "7a996e569a9817e43014395cbf1fccda38e9e10ba5d1f5e310fe03a3e62fb0b7"
+  },
+  "django-test_http.py.txt": {
+    "title": "Django 6.1.2 tests/utils_tests/test_http.py (ETagProcessingTests)",
+    "url": "https://raw.githubusercontent.com/django/django/2212534bae393714e1e51db2341d4fd5545e19f6/tests/utils_tests/test_http.py",
+    "revision": "django/django tag 6.1.2, commit 2212534bae393714e1e51db2341d4fd5545e19f6",
+    "fetched": "2026-10-17",
+    "licence": "BSD-3-Clause",
+    "size": 24227,
+    "sha256": "bae7854c01f647afd1562d85f0121018bc31df55c518006f890215aa72cb2bea"
+  },
+  "django-conditional_tests.py.txt": {
+    "title": "Django 6.1.2 tests/conditional_processing/tests.py",
+    "url": "https://raw.githubusercontent.com/django/django/2212534bae393714e1e51db2341d4fd5545e19f6/tests/conditional_processing/tests.py",
+    "revision": "django/django tag 6.1.2, commit 2212534bae393714e1e51db2341d4fd5545e19f6",
+    "fetched": "2026-10-17",
+    "licence": "BSD-3-Clause",
+    "size": 12853,
+    "sha256": "05bdb605638e3c973e24726888987ab555828cd222073b2da125cef98f3c4638"
+  },
+  "fresh-index.js.txt": {
+    "title": "jshttp/fresh 2.0.0 index.js (freshness check used by Express)",
+    "url": "https://raw.githubusercontent.com/jshttp/fresh/f185ef1376c0337d366f9e35bda92b053983fd81/index.js",
+    "revision": "jshttp/fresh tag v2.0.0, commit f185ef1376c0337d366f9e35bda92b053983fd81",
+    "fetched": "2026-10-17",
+    "licence": "MIT",
+    "size": 2705,
+    "sha256": "7d1a55392c8dcdffc22cd06b549b28cbd102a1761cfa6190eb81e37baef3d25a"
+  },
+  "fresh-test.js.txt": {
+    "title": "jshttp/fresh 2.0.0 test/fresh.js",
+    "url": "https://raw.githubusercontent.com/jshttp/fresh/f185ef1376c0337d366f9e35bda92b053983fd81/test/fresh.js",
+    "revision": "jshttp/fresh tag v2.0.0, commit f185ef1376c0337d366f9e35bda92b053983fd81",
+    "fetched": "2026-10-17",
+    "licence": "MIT",
+    "size": 6920,
+    "sha256": "dd6ede481857e773fe391933f6b602350392d753bb685aa0dfafbb80f7638938"
+  },
+  "express-request.js.txt": {
+    "title": "Express 5.3.0 lib/request.js (req.fresh)",
+    "url": "https://raw.githubusercontent.com/expressjs/express/cf6722bf89a86905281d9160b6482e08166b5ef0/lib/request.js",
+    "revision": "expressjs/express tag v5.3.0, commit cf6722bf89a86905281d9160b6482e08166b5ef0",
+    "fetched": "2026-10-18",
+    "licence": "MIT",
+    "size": 12283,
+    "sha256": "a9fda39c4472aeaa4d696f4324f58cc1d036f84ed04145d6d56a12a59578e751"
+  },
+  "express-package.json.txt": {
+    "title": "Express 5.3.0 package.json (its fresh dependency)",
+    "url": "https://raw.githubusercontent.com/expressjs/express/cf6722bf89a86905281d9160b6482e08166b5ef0/package.json",
+    "revision": "expressjs/express tag v5.3.0, commit cf6722bf89a86905281d9160b6482e08166b5ef0",
+    "fetched": "2026-10-18",
+    "licence": "MIT",
+    "size": 2731,
+    "sha256": "9645053f08f43135ec21f46ae434e49e10528c9062fde7776b150f38a2335afe"
+  },
+  "nginx-not_modified.c.txt": {
+    "title": "nginx 1.31.7 src/http/modules/ngx_http_not_modified_filter_module.c",
+    "url": "https://raw.githubusercontent.com/nginx/nginx/28c4fc458a90c1defcfb9753ae9295740a651c40/src/http/modules/ngx_http_not_modified_filter_module.c",
+    "revision": "nginx/nginx tag release-1.31.7, commit 28c4fc458a90c1defcfb9753ae9295740a651c40",
+    "fetched": "2026-10-17",
+    "licence": "BSD-2-Clause",
+    "size": 6976,
+    "sha256": "ae1d4d249c76b748c336d9c132b2911b3e503c536e8ef838ab088fff70ef455b"
+  }
+}
