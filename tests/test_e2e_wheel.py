@@ -6,6 +6,7 @@ Slow and needs the build backend, so it runs only with ETAG_E2E=1.
 from __future__ import annotations
 
 import os
+import re
 import subprocess
 import sys
 import venv
@@ -110,8 +111,12 @@ def test_the_archives_hold_exactly_the_package_and_its_sources(tmp_path: Path) -
     # Every test module ships with the scripts the tests import, so the sdist runs its suite.
     tests = {f"tests/{path.name}" for path in (ROOT / "tests").glob("*.py")}
     assert tests <= set(members)
-    scripts = {"fetch_upstream.py", "oracle_fixture.py", "oracle_runs.py"}
+    scripts = {"check.ps1", "fetch_upstream.py", "oracle_fixture.py", "oracle_runs.py"}
     assert {m for m in members if m.startswith("scripts/")} == {f"scripts/{s}" for s in scripts}
+    # Every script the shipped docs tell a reader to run is in the sdist.
+    for doc in ("README.md", "CONTRIBUTING.md"):
+        named = set(re.findall(r"scripts/[\w.]+", (ROOT / doc).read_text(encoding="utf-8")))
+        assert named and named <= set(members), (doc, named - set(members))
     unpacked = tmp_path / "sdist" / "etag-1.0.0"
     collected = _run(
         sys.executable, "-m", "pytest", "--co", "-q", "-p", "no:cacheprovider", cwd=unpacked

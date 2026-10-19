@@ -262,3 +262,26 @@ Supported Pythons on this PC, the 4b60510 wheel installed into a fresh venv and 
 suite run from a staging copy without `src`: CPython 3.10.19, 3.11.5, 3.12.12, 3.13.2,
 3.14.2 and 3.14.2 free-threaded, 489 passed and 9 skipped on each (the live oracles,
 the opt-in end-to-end modules, the mypy check); 3.8.20 and 3.9.25 refuse the wheel.
+
+## QA lenses, round 1 (item 19)
+
+Five independent lenses ran on 4f57fe5. Every finding was fixed; none is disputed.
+
+| Lens | Id | Finding | Change |
+| --- | --- | --- | --- |
+| a | A1 | `Header` had no example and `test_docs` skipped it | The package docstring documents `Header` with a doctest that names it; `test_every_public_name_has_a_passing_example` no longer skips it and requires that example |
+| a | A2 | `EntityTag` signature showed `ForwardRef` on 3.10 to 3.13 | Postponed annotations dropped in `_tag.py`; `test_entity_tag_shows_a_plain_signature` |
+| a | A3 | `parse("*")` equals `parse('"*"')` | Kept on purpose and recorded as a stable choice in CHANGELOG and GUIDE, with the `str()` round-trip hazard spelled out; `test_the_parsed_wildcard_equals_the_tag_star_by_design` |
+| a | A4 | GUIDE overstated which oracle ran on which set | GUIDE states per tool: Werkzeug, Django, aiohttp on both sets, Starlette on the 3,000 requests, fresh on the 324 GET requests with a tag and If-None-Match |
+| b | F1 | `matches` raised on a valid empty list | `matches` returns `False` for a list with no member; `parse` still raises; `test_contract_lists.py`, CHANGELOG |
+| b | F2 | `["*", ""]` and `"*, "` disagreed | Empty elements around `*` are skipped in both forms; `test_the_wildcard_reads_the_same_as_field_lines_and_as_one_string`, grammar oracle updated, CHANGELOG |
+| c | F1 | A memoryview or array header was read as field lines | Header readers raise the header `TypeError` for any object exporting a buffer other than bytes and bytearray; `test_contract_buffers.py`, CHANGELOG, GUIDE error table |
+| c | F2 | `make_etag` docstring omitted `BufferError` and the released-memoryview `ValueError` | Docstring lists both; pinned by `test_contract_buffers.py` |
+| d | L1 | sdist lacked `scripts/check.ps1` named by README and CONTRIBUTING | Added to `only-include`; `test_e2e_wheel` checks that every `scripts/` path named in README and CONTRIBUTING ships |
+| e | F1 | Mutant P12 (no validation of an `EntityTag` argument) survived | `test_a_malformed_entity_tag_object_is_rejected_everywhere` over every function taking a tag |
+| e | F2 | Mutant X15 (case-folded strong comparison) survived | Case-sensitivity tests for both comparisons, `matches` and the evaluators |
+| e | F3 | Mutant X5 (field lines joined with `,`) survived | `test_error_positions_count_in_the_lines_joined_with_comma_space`; `parse` docstring and GUIDE say positions count in the value joined with `", "` |
+
+Each new contract was first run red: P12, X15, X5 and the buffer reading were applied
+one at a time to a copy of the fixed tree and each is killed by
+`test_contract_strict.py`, `test_contract_lists.py` or `test_contract_buffers.py`.

@@ -26,7 +26,11 @@ def read_field(header: Header) -> str | None:
     octets = as_octets(header)
     if octets is not None:
         return octets.decode("latin-1")
-    if issubclass(type(header), Sequence) and not issubclass(type(header), EntityTag):
+    if (
+        issubclass(type(header), Sequence)
+        and not issubclass(type(header), EntityTag)
+        and not _exports_buffer(header)
+    ):
         lines = [_line(line) for line in header]
         if not lines:
             return None
@@ -34,6 +38,18 @@ def read_field(header: Header) -> str | None:
         # carry no element, so they are dropped rather than turned into one.
         return ", ".join(line for line in lines if line.strip(_OWS))
     raise TypeError(f"header must be str, bytes or a list of them, not {type_name(header)}")
+
+
+def _exports_buffer(value: object) -> bool:
+    # A memoryview or an array.array is a Sequence of numbers or code units, not of field
+    # lines: reading one as lines would decide a precondition on a value nobody sent.
+    try:
+        memoryview(value).release()  # type: ignore[arg-type]
+    except TypeError:
+        return False
+    except (ValueError, BufferError):
+        return True  # a released or non-contiguous buffer is still a buffer
+    return True
 
 
 def field_value(header: Header) -> str:

@@ -78,10 +78,13 @@ def test_every_public_name_has_a_passing_example() -> None:
     runner = doctest.DocTestRunner(optionflags=doctest.ELLIPSIS)
     examples = 0
     for name in [*etag.__all__, "__module__"]:
-        if name == "Header":
-            continue
-        target = etag if name == "__module__" else getattr(etag, name)
+        # Header is a type alias, which cannot hold a docstring of its own: the package
+        # docstring documents it, so its examples there must name it.
+        alias = name == "Header"
+        target = etag if alias or name == "__module__" else getattr(etag, name)
         tests = [t for t in finder.find(target, name, globs=dict(vars(etag))) if t.examples]
+        if alias:
+            tests = [t for t in tests if any(name in e.source for e in t.examples)]
         assert tests, f"{name} has no example"
         for test in tests:
             examples += len(test.examples)

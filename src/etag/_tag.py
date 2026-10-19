@@ -66,8 +66,10 @@ def make_etag(data: bytes | bytearray | memoryview | str, *, weak: bool = False)
     those bytes too, although the annotation names only the common types. The result
     is a double-quoted opaque-tag of 64 lower-case hexadecimal digits, prefixed with
     ``W/`` when ``weak`` is set. Raises ``TypeError`` for anything else or for a
-    ``weak`` that is not a bool, and ``ValueError`` naming the code point and its index
-    for text holding a lone surrogate.
+    ``weak`` that is not a bool, ``ValueError`` naming the code point and its index for
+    text holding a lone surrogate, and, as :class:`memoryview` itself does,
+    ``BufferError`` for a buffer that is not contiguous and ``ValueError`` for a
+    memoryview that was released.
 
     >>> make_etag(b"abc")[:11]
     '"ba7816bf8f'

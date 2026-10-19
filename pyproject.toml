@@ -58,6 +58,7 @@ packages = ["src/etag"]
 only-include = [
     "src",
     "tests",
+    "scripts/check.ps1",
     "scripts/fetch_upstream.py",
     "scripts/oracle_fixture.py",
     "scripts/oracle_runs.py",

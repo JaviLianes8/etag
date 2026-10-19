@@ -116,7 +116,7 @@ Messages give a position or a type name (cut to 40 characters), never the input.
 | `make_etag` | `ValueError` | `U+XXXX cannot be encoded as UTF-8` at an index: text holding a lone surrogate |
 | `make_etag` | `BufferError` | a buffer that is not contiguous |
 | `make_etag` | `ValueError` | a memoryview that was released |
-| any function | `TypeError` | a header that is not text, bytes or a list of them; a tag that is not text or an `EntityTag`; an opaque value that is not text; `weak` or `exists` that is not a bool; a `method` that is not text; `make_etag` data that is neither text nor bytes-like |
+| any function | `TypeError` | a header that is not text, bytes or a list of them (a `memoryview` or an `array.array` is not a list of field lines); a tag that is not text or an `EntityTag`; an opaque value that is not text; `weak` or `exists` that is not a bool; a `method` that is not text; `make_etag` data that is neither text nor bytes-like |
 
 The evaluators never raise for a malformed header: they return the outcome the RFC gives
 to a malformed field. Use `parse` or `matches` when you want the error instead.
@@ -133,9 +133,11 @@ property gets the `TypeError` of a wrong argument type.
 
 ## How other implementations differ
 
-The tests run Werkzeug 3.1.9, Django 6.1.2, aiohttp 3.14.5, Starlette 1.8.0 and Node
-v24.18.0 with jshttp/fresh 2.0.0 on the same 2,000 seeded field values and 3,000 seeded
-requests (`tests/fixtures/oracle_runs.json`), and read the nginx 1.31.7 source. Each
+The tests run reference implementations on one seeded set of 2,000 field values and
+3,000 requests (`tests/fixtures/oracle_runs.json`): Werkzeug 3.1.9, Django 6.1.2 and
+aiohttp 3.14.5 on both, Starlette 1.8.0 on the 3,000 requests, and Node v24.18.0 with
+jshttp/fresh 2.0.0 on the 324 GET requests that carry both a current tag and
+If-None-Match. They also read the nginx 1.31.7 source. Each
 difference below is asserted by `tests/test_references.py` or
 `tests/test_references_more.py`; everything else agrees.
 
