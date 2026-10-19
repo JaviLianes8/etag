@@ -364,3 +364,23 @@ Gates and suite on a fresh clone of cd56e52 on Elena's PC, CPython 3.14 with
 `ruff format --check .`, `ruff check .` and `mypy --strict src tests scripts` exit 0;
 `pytest` with `ETAG_E2E=1`, `ETAG_E2E_PYPI=1` and the 300-second per-test timeout exits 0
 on all 855 collected tests.
+
+## Independent review, round 1 (item 16)
+
+The independent reviewer audited 38cd610 against the 18 items. Both findings are fixed;
+none is disputed. The finding was a missing contract on behaviour that was already right,
+so the library code is unchanged and the CHANGELOG has no entry.
+
+| Id | Finding | Change |
+| --- | --- | --- |
+| F1 | Items 6 and 18: mutant D23 (the method upper-cased before the `CONNECT`, `OPTIONS`, `TRACE` check) survived, and a stray line `70` followed the author mutation table | `test_only_the_upper_case_ignored_methods_skip_preconditions` runs `connect`, `options`, `trace`, `Trace`, `Options` and `cONNECT` and pins 412 for a failing If-Match and for a matching If-None-Match; D23 added to the mutation table; stray line removed |
+| F2 | Item 16 fails while F1 is open | F1 fixed; the review is to be run again |
+
+The new contract was first run red: D23 applied to a copy of the fixed tree fails all six
+cases of the new test, and the unchanged code passes them.
+
+Gates and suite on a fresh clone of 9095c5c on Elena's PC, CPython 3.14 with
+`.[dev,oracle]` and the 11 upstream files fetched by `scripts/fetch_upstream.py`:
+`ruff format --check .`, `ruff check .` and `mypy --strict src tests scripts` exit 0;
+`pytest` with `ETAG_E2E=1`, `ETAG_E2E_PYPI=1` and the 300-second per-test timeout exits 0
+on all 861 collected tests.
